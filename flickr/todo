@@ -1,0 +1,27 @@
+clockr
+favcol
+
+apache module
+
+add missing const on input params.
+add authentication.
+
+unimplemented methods:
+
+    flickr.groups.browse
+    flickr.groups.getInfo
+    flickr.groups.search
+
+    flickr.groups.pools.add
+    flickr.groups.pools.getContext
+    flickr.groups.pools.getGroups
+    flickr.groups.pools.getPhotos
+    flickr.groups.pools.remove
+
+    flickr.interestingness.getList
+
+    flickr.people.getPublicGroups
+    flickr.people.getPublicPhotos
+
+    flickr.photos.getContext
+    flickr.photos.getExif
