@@ -1,0 +1,1 @@
+Code that can be used to detect DVD drives properly on NT systems. Proposed as a patch to vlc, but never accepted (and i think they lost it when they moved from bugzilla to Trac...).
