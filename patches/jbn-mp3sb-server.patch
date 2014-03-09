@@ -1,0 +1,81 @@
+diff -u mp3sb_serv_mpg123.pl /usr/local/mp3sb_serv/
+--- mp3sb_serv_mpg123.pl	Tue May  2 20:32:47 2000
++++ /usr/local/mp3sb_serv/mp3sb_serv_mpg123.pl	Sun Jul 23 15:19:20 2000
+@@ -36,10 +36,10 @@
+ 
+ 
+ # the mp3 player path
+-my ($player) = "/usr/bin/mpg123 -R --aggressive -";
++my ($player) = "/usr/local/bin/mpg123 -R --aggressive -";
+ # the place where you put the equalizer files
+ 
+ 
+ # Set this to 1 if you want to have the console 
+@@ -186,7 +186,7 @@
+ 
+ 	return $info;
+ 
+-    return "Error : Unknow song $id";
++    return "Error : Unknown song $id";
+ 
+ }
+ 
+@@ -1033,7 +1033,8 @@
+ 	}
+ 
+ 
+-	if ($ch =~ /^HELLO (\w+) (\w+)/)
++#	if ($ch =~ /^HELLO (\w+) (\w+)/)
++	if ($ch =~ /^HELLO ([A-z0-9.-]+) ([A-z0-9.-]+)/)
+ 	{
+ 	    for ($i=0;$i<scalar(@cnx);$i++)
+ 	    {
+@@ -1052,7 +1053,7 @@
+ 
+ 
+ 
+-	$result = "Error : Unknow command [$ch]";
++	$result = "Error : Unknown command [$ch]";
+ 
+ 
+     }
+@@ -1071,16 +1072,16 @@
+ sub display_logued 
+ {
+ format LOGUED=
+-[@<<<] @<<<<<<<<<<<<<<<@<<<<<<<< (@<<<<<<<<<<<<) 
++[@<<<] @<<<<<<<<<<<<<<<@<<<<<<<<<<<< (@<<<<<<<<<<<<) 
+ $cnx[$i]{'NS'},$cnx[$i]{'user'},$cnx[$i]{'client'},$cnx[$i]{'ip'}
+ .
+ $~="LOGUED";
+ 
+ 
+ 	print $cls;
+-	print "------------------------------------------------\n";
++	print "----------------------------------------------------\n";
+ 	print "Total : ".scalar(@cnx) ." users and $con \n";
+-	print "------------------------------------------------\n";
++	print "----------------------------------------------------\n";
+ 
+ 	for ($i=0;$i<scalar(@cnx);$i++)
+ 	{
+@@ -1091,7 +1092,7 @@
+ 	  write;
+ 	}
+ 	print "\033[00\m";
+-	print "------------------------------------------------\n";
++	print "----------------------------------------------------\n";
+ 
+ 
+ }
+@@ -1210,8 +1211,8 @@
+ 	@inetaddr = unpack('C4', $inetaddr);
+ 	my $ip = "$inetaddr[0].$inetaddr[1].$inetaddr[2].$inetaddr[3]";
+ 	ns_log ("New connection from NS$con $ip");
+-	$cnx[$l]{'user'} = "unknow";
+-	$cnx[$l]{'client'} = "unknow";
++	$cnx[$l]{'user'} = "unknown";
++	$cnx[$l]{'client'} = "unknown";
+ 	$cnx[$l]{'ip'} = $ip;
+ 	if ($show_console) { &display_logued(); }
+     }

@@ -1,0 +1,3282 @@
+diff -Naurd xmms-1.2.4/General/Makefile.am xmms-1.2.4-ape/General/Makefile.am
+--- xmms-1.2.4/General/Makefile.am	Thu Jul 29 20:03:11 1999
++++ xmms-1.2.4-ape/General/Makefile.am	Tue Apr 17 22:12:37 2001
+@@ -1 +1 @@
+-SUBDIRS = ir joystick song_change
++SUBDIRS = ir joystick song_change playlist_ed default_playlist_editor
+diff -Naurd xmms-1.2.4/General/default_playlist_editor/Makefile.am xmms-1.2.4-ape/General/default_playlist_editor/Makefile.am
+--- xmms-1.2.4/General/default_playlist_editor/Makefile.am	Wed Dec 31 23:00:00 1969
++++ xmms-1.2.4-ape/General/default_playlist_editor/Makefile.am	Tue Apr 17 23:41:11 2001
+@@ -0,0 +1,12 @@
++lib_LTLIBRARIES = libdpe.la
++
++libdir = $(plugindir)/$(GENERAL_PLUGIN_DIR)
++
++libdpe_la_LDFLAGS = -module -avoid-version
++libdpe_la_LIBADD = @GTK_LIBS@ @PTHREAD_LIBS@
++
++libdpe_la_SOURCES =    \
++playlist_editor.c \
++playlist_editor.h 
++
++INCLUDES = @GTK_CFLAGS@
+diff -Naurd xmms-1.2.4/General/default_playlist_editor/playlist_editor.c xmms-1.2.4-ape/General/default_playlist_editor/playlist_editor.c
+--- xmms-1.2.4/General/default_playlist_editor/playlist_editor.c	Wed Dec 31 23:00:00 1969
++++ xmms-1.2.4-ape/General/default_playlist_editor/playlist_editor.c	Tue Apr 17 23:58:59 2001
+@@ -0,0 +1,59 @@
++/*  
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ */
++
++#include "xmms/xmms.h"
++#include "libxmms/dirbrowser.h"
++#include "playlist_editor.h"
++
++PlaylistEditorPlugin dpe_gp = {
++  {
++    NULL,				/* handle */
++    NULL,				/* filename */
++    -1,				/* xmms_session */
++    "Default Playlist Editor",
++    NULL,
++    NULL,
++    NULL,
++    NULL
++  },
++  NULL, NULL, NULL,
++  default_playlist_show_url_editor,
++  default_playlist_show_dir_editor,
++  default_playlist_show_file_editor
++};
++
++PlaylistEditorPlugin *
++get_peplugin_info (void)
++{
++  return &dpe_gp;
++}
++
++void default_playlist_show_url_editor(PlaylistEditorPlugin *plugin, GtkWidget *w)
++{
++  playlistwin_show_add_url_window(plugin);
++}
++
++void default_playlist_show_dir_editor(PlaylistEditorPlugin *plugin, GtkWidget *w)
++{
++  playlistwin_show_dirbrowser(plugin);
++}
++
++void default_playlist_show_file_editor(PlaylistEditorPlugin *plugin, GtkWidget *w)
++{
++  if(plugin->file_editor==NULL) {
++    plugin->file_editor = util_create_filebrowser(FALSE);
++    gtk_signal_connect(GTK_OBJECT(plugin->file_editor), "destroy",
++		       GTK_SIGNAL_FUNC(gtk_widget_destroyed), &plugin->file_editor);
++  }
++}
++
+diff -Naurd xmms-1.2.4/General/default_playlist_editor/playlist_editor.h xmms-1.2.4-ape/General/default_playlist_editor/playlist_editor.h
+--- xmms-1.2.4/General/default_playlist_editor/playlist_editor.h	Wed Dec 31 23:00:00 1969
++++ xmms-1.2.4-ape/General/default_playlist_editor/playlist_editor.h	Tue Apr 17 23:56:35 2001
+@@ -0,0 +1,10 @@
++#ifndef PLAYLIST_EDITOR_H
++#define PLAYLIST_EDITOR_H
++
++#include "xmms/plugin.h"
++
++void default_playlist_show_url_editor(PlaylistEditorPlugin *plugin, GtkWidget *w);
++void default_playlist_show_dir_editor(PlaylistEditorPlugin *plugin, GtkWidget *w);
++void default_playlist_show_file_editor(PlaylistEditorPlugin *plugin, GtkWidget *w);
++
++#endif
+diff -Naurd xmms-1.2.4/General/playlist_ed/Makefile.am xmms-1.2.4-ape/General/playlist_ed/Makefile.am
+--- xmms-1.2.4/General/playlist_ed/Makefile.am	Wed Dec 31 23:00:00 1969
++++ xmms-1.2.4-ape/General/playlist_ed/Makefile.am	Mon Apr 16 16:37:46 2001
+@@ -0,0 +1,16 @@
++lib_LTLIBRARIES = libpe.la
++
++libdir = $(plugindir)/$(GENERAL_PLUGIN_DIR)
++
++libpe_la_LDFLAGS = -module -avoid-version
++libpe_la_LIBADD = @GTK_LIBS@ @PTHREAD_LIBS@
++
++libpe_la_SOURCES =    \
++pe.c \
++pe.h \
++configure.c \
++about.c \
++browser.c \
++browser.h
++
++INCLUDES = @GTK_CFLAGS@
+diff -Naurd xmms-1.2.4/General/playlist_ed/about.c xmms-1.2.4-ape/General/playlist_ed/about.c
+--- xmms-1.2.4/General/playlist_ed/about.c	Wed Dec 31 23:00:00 1969
++++ xmms-1.2.4-ape/General/playlist_ed/about.c	Mon Apr 16 16:37:46 2001
+@@ -0,0 +1,82 @@
++/*  APED plugin for xmms by Robin Gareus (robin@gareus.de)
++ *  Advanced Playlist EDitor
++ *
++ *  X11amp is Copyright (C) 1998-1999  Peter Alm, Mikael Alm, Olle Hallnas, ThomNilsson and 4Front Technologies
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *
++ *
++ * Version 0.1 hacked 26-28. April 2000
++ *    main things that everyithing seems to work fine on my machine...
++ * Version 0.2        16. May 2000
++ *    changed the about text.
++ */
++
++#include "pe.h"
++
++
++static GtkWidget *pe_about_win;
++
++/*
++ * yes short and really neccesary
++ * it was the first thing that worked :)
++ */
++void
++pe_about (void)
++{
++  GtkWidget *vbox, *frame, *label, *box, *button, *textbox;
++
++  if (pe_about_win)
++    return;
++  pe_about_win = gtk_window_new (GTK_WINDOW_DIALOG);
++  gtk_signal_connect (GTK_OBJECT (pe_about_win), "destroy",
++		      GTK_SIGNAL_FUNC (gtk_widget_destroyed), &pe_about_win);
++  gtk_window_set_title (GTK_WINDOW (pe_about_win), "About");
++  gtk_window_set_policy (GTK_WINDOW (pe_about_win), FALSE, FALSE, FALSE);
++  gtk_window_set_position (GTK_WINDOW (pe_about_win), GTK_WIN_POS_MOUSE);
++  gtk_container_border_width (GTK_CONTAINER (pe_about_win), 10);
++
++  vbox = gtk_vbox_new (FALSE, 10);
++  gtk_container_add (GTK_CONTAINER (pe_about_win), vbox);
++
++  frame = gtk_frame_new ("XMMS Advanced Playlist Editor Plugin:");
++  gtk_box_pack_start (GTK_BOX (vbox), frame, FALSE, FALSE, 0);
++  textbox = gtk_vbox_new (FALSE, 10);
++  gtk_container_border_width (GTK_CONTAINER (textbox), 10);
++  gtk_container_add (GTK_CONTAINER (frame), textbox);
++
++  label = gtk_label_new ("Programmed by Robin Gareus <robin@gareus.de>\n"
++			 "http://www.xmms.uni-hd.de \n\n"
++			 "...makes you feel quite cool while editing your Playlists!");
++
++  gtk_box_pack_start_defaults (GTK_BOX (textbox), label);
++
++  box = gtk_hbutton_box_new ();
++  gtk_button_box_set_spacing (GTK_BUTTON_BOX (box), 5);
++  gtk_box_pack_start (GTK_BOX (vbox), box, FALSE, FALSE, 0);
++
++  button = gtk_button_new_with_label ("Ok");
++  gtk_signal_connect_object (GTK_OBJECT (button), "clicked",
++			     GTK_SIGNAL_FUNC (gtk_widget_destroy),
++			     GTK_OBJECT (pe_about_win));
++  GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
++  gtk_box_pack_start (GTK_BOX (box), button, TRUE, TRUE, 0);
++  gtk_widget_grab_default (button);
++
++  gtk_widget_show (button);
++  gtk_widget_show (box);
++  gtk_widget_show (frame);
++  gtk_widget_show (textbox);
++  gtk_widget_show (label);
++  gtk_widget_show (vbox);
++  gtk_widget_show (pe_about_win);
++}
+diff -Naurd xmms-1.2.4/General/playlist_ed/browser.c xmms-1.2.4-ape/General/playlist_ed/browser.c
+--- xmms-1.2.4/General/playlist_ed/browser.c	Wed Dec 31 23:00:00 1969
++++ xmms-1.2.4-ape/General/playlist_ed/browser.c	Sat Apr 21 19:40:04 2001
+@@ -0,0 +1,1202 @@
++/*  APED plugin for xmms by Robin Gareus (robin@gareus.de)
++ *  Advanced Playlist EDitor 
++ *
++ *  X11amp is Copyright (C) 1998-1999  Peter Alm, Mikael Alm, Olle Hallnas, ThomNilsson and 4Front Technologies
++ *  
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ * 
++ * 
++ * Version 0.1 hacked 26-28. April 2000
++ *    main things that everyithing seems to work fine on my machine...
++ * Version 0.2        16. May 2000
++ *    fixed some random (not really random) problem
++ *    added dynamic multiple tree-node extensions
++ *    minor bug fixes
++ * Version 0.3	      6. Feb 2001
++ *    added drag and drop support
++ */
++
++
++#include "pe.h"
++
++GtkWidget *pe_songlist, *pe_tree;
++gchar *current_path;
++
++static void update_songlist (gchar * directory);
++static int int_compare_func (const void *a, const void *b);
++static void create_tree_by_ls (GtkTree * tree, char *directory);
++static void clear_songlist ();
++static gboolean exists_dir_in (char *directory);
++static void playlist_add_files ();
++static GtkCTreeNode *firstnode;
++
++static GtkTargetEntry target_table[] =
++{
++          { "text/plain", 0, 1 }
++};
++
++static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
++
++/*
++ * nice pixmaps
++ * inspired by the dirbrowswer pixmaps
++ */
++static char *folder[] = {
++  "16 16 8 1",
++  "       c None",
++  ".      c #909000",
++  "+      c #000000",
++  "@      c #EFE8EF",
++  "#      c #FFF8CF",
++  "$      c #FFF890",
++  "%      c #CFC860",
++  "&      c #FFC890",
++  "                ",
++  "  .....+        ",
++  " .@##$$.+       ",
++  ".%%%%%%%......  ",
++  ".###########$%+ ",
++  ".#$$$$$$$$$$&%+ ",
++  ".#$$$$$$$&$&$%+ ",
++  ".#$$$$$$$$&$&%+ ",
++  ".#$$$$$&$&$&$%+ ",
++  ".#$$$$$$&$&$&%+ ",
++  ".#$$$&$&$&$&&%+ ",
++  ".#&$&$&$&$&&&%+ ",
++  ".%%%%%%%%%%%%%+ ",
++  " ++++++++++++++ ",
++  "                ",
++  "                "
++};
++
++/* XPM */
++static char *record[] = {
++  "16 16 12 1",
++  "       c None",
++  ".      c #808080",
++  "+      c #E0E0C0",
++  "@      c #4F484F",
++  "#      c #909000",
++  "$      c #FFF8EF",
++  "%      c #AA99BB",
++  "&      c #3020E0",
++  "*      c #7F7800",
++  "=      c #FFC890",
++  "-      c #FFF890",
++  ";      c #2F3000",
++  "           ;;;  ",
++  "         ;;%%%; ",
++  "        ;+%%%%%;",
++  "   ###.;%%+%%%%%",
++  "  #=-=.;%%++%%%%",
++  "  #.--;%%%%%;%%%",
++  "######;####;;;+%",
++  "#$$$$$$$$$=-;%%+",
++  "#$-------=-=#&;%",
++  " #---=--=-==-#;%",
++  " #-----=-=-=-#;;",
++  " #-=--=-=-=-=#; ",
++  "  #=-=-=-=-==#; ",
++  "  ############; ",
++  "   ;;;;;;;;;;;  ",
++  "                "
++};
++/* XPM */
++static char *playlist[] = {
++  "16 16 12 1",
++  "       c None",
++  ".      c #808080",
++  "+      c #E0E0D0",
++  "@      c #4F484F",
++  "#      c #909000",
++  "$      c #FFF8EF",
++  "%      c #CFC860",
++  "&      c #3020E0",
++  "*      c #7F7800",
++  "=      c #FFC890",
++  "-      c #FFF890",
++  ";      c #2F3000",
++  "      .........@",
++  "      .$+++++++@",
++  "      .$&&&&&&&@",
++  "   ###.$+++++++@",
++  "  #%-=.$++&&&&&@",
++  "  #.--.++++++++@",
++  "############&&&@",
++  "#$$$$$$$$$=%#++@",
++  "#$-------=-=#&&@",
++  " #---=--=-==-#+@",
++  " #-----=-=-=%#&@",
++  " #-=--=-=-=-=#+@",
++  "  #=-=-=-=-==#; ",
++  "  ############; ",
++  "   ;;;;;;;;;;;  ",
++  "                "
++};
++/* XPM */
++static char *ofolder[] = {
++  "16 16 12 1",
++  "       c None",
++  ".      c #808080",
++  "+      c #E0E0D0",
++  "@      c #4F484F",
++  "#      c #909000",
++  "$      c #FFF8EF",
++  "%      c #CFC860",
++  "&      c #003090",
++  "*      c #7F7800",
++  "=      c #FFC890",
++  "-      c #FFF890",
++  ";      c #2F3000",
++  "        .       ",
++  "       .+@      ",
++  "   ###.$$+@     ",
++  "  #%%.$$$$+@    ",
++  "  #%.$$$&$$+@** ",
++  "  #.+++&+&+++@* ",
++  "############++@ ",
++  "#$$$$$$$$$=%#++@",
++  "#$-------=-=#+; ",
++  " #---=--=-==%#; ",
++  " #-----=-=-==#; ",
++  " #-=--=-=-=-=#; ",
++  "  #=-=-=-=-==#; ",
++  "  ############; ",
++  "   ;;;;;;;;;;;  ",
++  "                "
++};
++
++static GdkPixmap *folder_pixmap =
++  NULL, *ofolder_pixmap, *playlist_pixmap, *record_pixmap;
++static GdkBitmap *folder_mask, *ofolder_mask, *playlist_mask, *record_mask;
++
++/*
++ * not only check for subdirs, but for Playlistfiles, too!
++ */
++static gboolean
++check_for_subdir (gchar * path)
++{
++  DIR *dir;
++  struct dirent *dirent;
++  struct stat statbuf;
++  gchar *npath, *tmp;
++
++  if ((dir = opendir (path)) != NULL)
++    {
++      while ((dirent = readdir (dir)) != NULL)
++	{
++	  if (dirent->d_name[0] != '.')
++	    {
++	      npath = g_strconcat (path, dirent->d_name, NULL);
++	      if (stat (npath, &statbuf) != -1 && S_ISDIR (statbuf.st_mode))
++		{
++		  g_free (npath);
++		  closedir (dir);
++		  return TRUE;
++		}
++	      if (stat (npath, &statbuf) != -1 && S_ISREG (statbuf.st_mode))
++		{
++		  tmp = strrchr (dirent->d_name, '.');
++		  if (tmp
++		      && (!strcasecmp (tmp, ".pls")
++			  || !strcasecmp (tmp, ".m3u")))
++		    {
++		      g_free (npath);
++		      closedir (dir);
++		      return TRUE;
++		    }
++		}
++	      g_free (npath);
++	    }
++	}
++      closedir (dir);
++    }
++  return FALSE;
++}
++
++/*
++ * i dont know whether i waste lot of memory by allocating 
++ * a gchar* as returntype, which i obvisiouoly not free again:)
++ * yes - this function does char-translate as set in
++ * pecfg.transl_[to;from]
++ * the listentry to path function isnt called, and maybe will be thrown out...
++ */
++gchar *
++listentry_to_path (gchar * artist)
++{
++  gchar *point, *retval;
++  gint i = 0;
++  retval = g_strdup (artist);
++  while (pecfg.transl_to + i && pecfg.transl_from + i)
++    {
++      if (*(pecfg.transl_from + i) == *(pecfg.transl_to + i))
++	break;
++      while (point = strchr (retval, *(pecfg.transl_to + i)))
++	memcpy (point, pecfg.transl_from + i, 1);
++      i++;
++    }
++  return (retval);
++}
++
++/*
++ * same as above
++ */
++gchar *
++path_to_listentry (gchar * path)
++{
++  gchar *point, *retval;
++  gint i = 0;
++  retval = g_strdup (path);
++  while (pecfg.transl_to + i && pecfg.transl_from + i)
++    {
++      if (*(pecfg.transl_from + i) == *(pecfg.transl_to + i))
++	break;
++      while (point = strchr (retval, *(pecfg.transl_from + i)))
++	memcpy (point, pecfg.transl_to + i, 1);
++      i++;
++    }
++  return (retval);
++}
++
++static void
++destroy_cb (gpointer data)
++{
++  DirNode *node = data;
++
++  g_free (node->path);
++  g_free (node);
++}
++
++static int
++filetreeent_compare_func (const void *a, const void *b)
++{
++  if (!a || !b || !((DirNode *) a)->path)
++    return -1;
++  return strcmp (((DirNode *) a)->path, (gchar *) b);
++}
++
++/*
++ * Drag and Drop function
++ * Drag and Drop is easy. BUt since the Selected Itemems are in
++ * the order they were selected, I have to sort them first...
++ */
++static void
++dragged (GtkWidget *w,
++                      GdkDragContext *ct,
++                      GtkSelectionData *data,
++                      guint inf,
++                      guint time)
++{
++   gchar *text,*dragdata = "";
++   GList *sel_list = NULL,*node ;
++
++   node = GTK_CLIST (pe_songlist)->selection;
++   if (pecfg.drag_order) {
++     while (node)
++      {
++        sel_list = g_list_prepend (sel_list, node->data);
++        node = g_list_next (node);
++      }
++     sel_list = g_list_sort (sel_list, int_compare_func);
++
++     if (cfg.open_rev_order)
++        node = g_list_last (sel_list);
++     else
++        node = sel_list;
++
++     while (node)
++      {
++          gtk_clist_get_text (GTK_CLIST (pe_songlist),
++                              GPOINTER_TO_INT (node->data), 3, &text);
++          dragdata=g_strconcat (dragdata, "\n",text,NULL);
++          if (cfg.open_rev_order)
++            node = g_list_previous (node);
++          else
++            node = g_list_next (node);
++      }
++      g_list_free (sel_list);
++
++   } else 
++   { 
++     while (node)
++      {
++        gtk_clist_get_text (GTK_CLIST (pe_songlist),
++                                GPOINTER_TO_INT (node->data), 3, &text);
++        dragdata=g_strconcat (dragdata, "\n",text,NULL);
++        node = g_list_next (node);
++      }
++   }
++
++/* Just pass the Filename(s) to xmms drag routine */
++   gtk_selection_data_set (data,
++                           data->target,
++                           8,
++                           dragdata,
++                           strlen(dragdata));
++    g_free(dragdata);
++   
++}
++;
++
++/*
++ * here are some functions for the ctree widget
++ */
++
++static void
++expand_cb (GtkWidget * widget, GtkCTreeNode * parent_node)
++{
++  DIR *dir;
++  struct dirent *dirent;
++  gchar *path, *text, *dummy = "dummy", *tmp;
++  struct stat statbuf;
++  GtkCTreeNode *node, *sub_node, *temp;
++  DirNode *parent_dirnode, *dirnode;
++  gboolean has_subdir = FALSE;
++
++  parent_dirnode =
++    gtk_ctree_node_get_row_data (GTK_CTREE (widget), parent_node);
++  if (parent_dirnode->scanned && pecfg.rescan)
++  {
++    node = GTK_CTREE_ROW (parent_node)->children;
++    while (node)
++    {
++      temp=node;
++      node = GTK_CTREE_NODE_NEXT (node);
++      gtk_ctree_remove_node (GTK_CTREE (widget), temp);
++    }
++    parent_dirnode->scanned = FALSE;
++  }
++  if (!parent_dirnode->scanned)
++    {
++      gtk_clist_freeze (GTK_CLIST (widget));
++      node =
++	gtk_ctree_find_by_row_data (GTK_CTREE (widget), parent_node, NULL);
++      if (node)
++        gtk_ctree_remove_node (GTK_CTREE (widget), node);
++      if ((dir = opendir (parent_dirnode->path)) != NULL)
++	{
++	  while ((dirent = readdir (dir)) != NULL)
++	    {
++	      path = g_strconcat (parent_dirnode->path, dirent->d_name, NULL);
++	      if (stat (path, &statbuf) != -1 && S_ISDIR (statbuf.st_mode)
++		  && dirent->d_name[0] != '.')
++		{
++		  dirnode = g_malloc0 (sizeof (DirNode));
++		  dirnode->path = g_strconcat (path, "/", NULL);
++		  text = path_to_listentry (dirent->d_name);
++		  if (check_for_subdir (dirnode->path))
++		    has_subdir = TRUE;
++		  else
++		    has_subdir = FALSE;
++		  node =
++		    gtk_ctree_insert_node (GTK_CTREE (widget), parent_node,
++					   NULL, &text, 4, folder_pixmap,
++					   folder_mask, ofolder_pixmap,
++					   ofolder_mask, !has_subdir, FALSE);
++		  g_free (text);
++		  gtk_ctree_node_set_row_data_full (GTK_CTREE (widget), node,
++						    dirnode, destroy_cb);
++		  if (has_subdir)
++		    sub_node =
++		      gtk_ctree_insert_node (GTK_CTREE (widget), node, NULL,
++					     &dummy, 4, NULL, NULL, NULL,
++					     NULL, FALSE, FALSE);
++		}
++	      else if (stat (path, &statbuf) != -1
++		       && S_ISREG (statbuf.st_mode)
++		       && dirent->d_name[0] != '.')
++		{
++		  tmp = strrchr (dirent->d_name, '.');
++		  if (tmp
++		      && (!strcasecmp (tmp, ".pls")
++			  || !strcasecmp (tmp, ".m3u")))
++		    {
++		      dirnode = g_malloc0 (sizeof (DirNode));
++		      dirnode->path = g_strconcat (path, "/", NULL);
++		      if (pecfg.replace_index
++			  && strstr (dirent->d_name, pecfg.indexname))
++			{
++			  text = g_strdup (pecfg.recordname);
++			  node =
++			    gtk_ctree_insert_node (GTK_CTREE (widget),
++						   parent_node, NULL, &text,
++						   4, record_pixmap,
++						   record_mask, NULL, NULL,
++						   TRUE, FALSE);
++			}
++		      else
++			{
++			  if (strlen (pecfg.playlistname) > 0)
++			    text =
++			      g_strconcat (pecfg.playlistname, " : ",
++					   path_to_listentry (dirent->d_name),
++					   NULL);
++			  else
++			    text =
++			      g_strconcat (path_to_listentry (dirent->d_name),
++					   NULL);
++
++			  tmp = strrchr (text, '.');
++			  if (tmp && pecfg.strip_extension)
++			    *(tmp) = '\0';
++			  node =
++			    gtk_ctree_insert_node (GTK_CTREE (widget),
++						   parent_node, NULL, &text,
++						   4, playlist_pixmap,
++						   playlist_mask, NULL, NULL,
++						   TRUE, FALSE);
++			}
++		      g_free (text);
++		      gtk_ctree_node_set_row_data_full (GTK_CTREE (widget),
++							node, dirnode,
++							destroy_cb);
++		    }
++		}
++	      g_free (path);
++	    }
++	  closedir (dir);
++	  gtk_ctree_sort_node (GTK_CTREE (widget), parent_node);
++	}
++      gtk_clist_thaw (GTK_CLIST (widget));
++      parent_dirnode->scanned = TRUE;
++    }
++}
++
++/*
++ * you just clicked in the tree :)
++ */
++static void
++select_row_cb (GtkWidget * widget, gint row, gint column,
++	       GdkEventButton * bevent, gpointer data)
++{
++  DirNode *dirnode;
++  GtkCTreeNode *node;
++  /*void (*handler) (gchar *);*/
++
++  node = gtk_ctree_node_nth (GTK_CTREE (widget), row);
++  dirnode = gtk_ctree_node_get_row_data (GTK_CTREE (widget), node);
++  update_songlist (dirnode->path);
++
++  if (bevent)
++    {
++      if (bevent->type == GDK_2BUTTON_PRESS)
++	{
++	  gtk_clist_select_all (GTK_CLIST (pe_songlist));
++	  playlist_add_files ();
++	}
++    }
++
++}
++
++
++
++/*
++ * the interaction with the playlist 
++ */
++static int
++int_compare_func (const void *a, const void *b)
++{
++  if ((gint) a < (gint) b)
++    return -1;
++  if ((gint) a > (gint) b)
++    return 1;
++  else
++    return 0;
++}
++
++/*
++ * add all selected file in the CList pe_songlist
++ * to the xmms-playlist and unselect all
++ */
++static void
++playlist_add_files ()
++{
++  GList *sel_list = NULL, *node;
++  gchar *text;
++
++  gtk_clist_freeze (GTK_CLIST (pe_songlist));
++
++  if (cfg.filesel_path)
++    g_free (cfg.filesel_path);
++  cfg.filesel_path = g_strdup (current_path);
++  if (!cfg.filesel_path)
++    return;
++
++  node = GTK_CLIST (pe_songlist)->selection;
++  while (node)
++    {
++      sel_list = g_list_prepend (sel_list, node->data);
++      node = g_list_next (node);
++    }
++  sel_list = g_list_sort (sel_list, int_compare_func);
++
++  if (cfg.open_rev_order)
++    node = g_list_last (sel_list);
++  else
++    node = sel_list;
++
++  if (node)
++    {
++      while (node)
++	{
++	  gtk_clist_get_text (GTK_CLIST (pe_songlist),
++			      GPOINTER_TO_INT (node->data), 3, &text);
++	  playlist_add (text);
++	  if (cfg.open_rev_order)
++	    node = g_list_previous (node);
++	  else
++	    node = g_list_next (node);
++	}
++      playlist_generate_shuffle_list ();
++    }
++
++  g_list_free (sel_list);
++  playlistwin_update_list ();
++  gtk_clist_unselect_all (GTK_CLIST (pe_songlist));
++  gtk_clist_thaw (GTK_CLIST (pe_songlist));
++}
++
++/*
++ * functions for the CList Songlist
++ */
++
++static void
++clear_songlist ()
++{
++  gtk_clist_freeze (GTK_CLIST (pe_songlist));
++  gtk_clist_clear (GTK_CLIST (pe_songlist));
++  gtk_clist_unselect_all (GTK_CLIST (pe_songlist));
++  gtk_clist_set_column_title (GTK_CLIST (pe_songlist), 0, g_strdup (" "));
++  gtk_clist_thaw (GTK_CLIST (pe_songlist));
++}
++
++/*
++ * this adds a file (named filename) 
++ * (filename ist absolute Path) to the CList pe_songslist 
++ * Playlist-load substitutions are performed
++ */
++static void
++songlist_ins (gchar * filename)
++{
++  gchar *temp, *path;
++  regex_t *preg;
++  regmatch_t pmatch[2];
++  gchar *tmp[4];
++  struct stat buf;
++  float size;
++  time_t *mtime;
++  char buffer[TIMESTRINGSIZE];
++
++  pmatch[0].rm_so = 0;
++  pmatch[0].rm_eo = 0;
++
++  if (cfg.enable_p_regexp)
++    {
++      preg = malloc (sizeof (regex_t));
++      regcomp (preg, cfg.p_regstr, REG_EXTENDED);
++      regexec (preg, filename, 1, pmatch, 0);
++      if (pmatch[0].rm_eo != 0)
++	{
++	  filename[pmatch[0].rm_so] = '\0';
++
++	  path =
++	    g_strconcat (filename, cfg.p_substr, filename + pmatch[0].rm_eo,
++			 NULL);
++	}
++      else
++	path = g_strdup (filename);
++      free (preg);
++    }
++  else
++    path = g_strdup (filename);
++
++  if (stat (path, &buf) == 0)
++    if (S_ISREG (buf.st_mode))
++      {
++	temp = strrchr (path, '/');
++	if (temp)
++	  tmp[0] = path_to_listentry (temp + 1);
++	else
++	  tmp[0] = path_to_listentry (path);
++
++	size = (float) buf.st_size;
++	if (size > 1024 * 1024)
++	  tmp[1] = g_strdup_printf ("%10.2f Mb", size / (1024 * 1024));
++	else if (buf.st_size > 1024 * 8)
++	  tmp[1] = g_strdup_printf ("%10.2f kb", size / 1024);
++	else
++	  tmp[1] = g_strdup_printf ("%10.0f byte", size);
++	mtime = &buf.st_mtime;
++	strftime (buffer, TIMESTRINGSIZE, TIMESTRING, localtime (mtime));
++	tmp[2] = /*g_strdup (buffer)*/ buffer;
++	tmp[3] = /*g_strdup (path)*/ path;
++	gtk_clist_append (GTK_CLIST (pe_songlist), tmp);
++	g_free(tmp[1]);
++      }
++  g_free(path);
++}
++
++/*
++ * this adds a file (named filename) from the playlist
++ * (playlist_name ist absolute Path) to the CList pe_songslist 
++ * this function only does the path settings.
++ * used to show Playlists in Browser.
++ */
++static void
++playlist_add_file (gchar * filename, gchar * playlist_name)
++{
++  gchar *temp, *path;
++
++  filename = g_strstrip (filename);
++
++  if (cfg.use_backslash_as_dir_delimiter)
++    {
++      while ((temp = strchr (filename, '\\')) != NULL)
++	*temp = '/';
++    }
++
++  if (filename[0] == '#' && cfg.ignore_dcross)
++    return;
++
++  if (filename[0] != '/' && !strstr (filename, ":/"))
++    {
++      path = g_strdup (playlist_name);
++      temp = strrchr (path, '/');
++      if (temp)
++	*temp = '\0';
++      else
++	{
++	  songlist_ins (filename);
++	  return;
++	}
++      temp = g_strdup_printf ("%s/%s", path, filename);
++      songlist_ins (temp);
++      g_free (temp);
++      g_free (path);
++    }
++  else
++    songlist_ins (filename);
++}
++
++/*
++ * wrapper to the functions above
++ * -> give me a playlistpath and i show it in the Browserwindow 
++ * the file reading is done here.
++ * note : only in this function filename means a playlist,
++ * in the above functions filname is a song, not a list!
++ */
++static void
++update_songlist_playlist (gchar * filename)
++{
++  FILE *file;
++  gchar *line, *ext, key[10], *temp;
++  gint i, noe;
++  /*guint entries = 0;*/
++  int linelen = 1024;
++
++  g_free (current_path);
++  current_path = g_strdup (filename);
++  temp = strrchr (current_path, '/');
++  if (temp)
++    *temp = '\0';
++
++  gtk_clist_set_column_title (GTK_CLIST (pe_songlist), 0, filename);
++
++  ext = strrchr (filename, '.');
++  if (ext && !strcasecmp (ext, ".pls"))
++    {
++      if ((line = read_ini_string (filename, "playlist", "NumberOfEntries"))
++	  != NULL)
++	{
++	  noe = atoi (line);
++	  g_free (line);
++	  for (i = 1; i <= noe; i++)
++	    {
++	      g_snprintf (key, 10, "File%d", i);
++	      if ((line = read_ini_string (filename, "playlist", key)))
++		{
++		  playlist_add_file (line, filename);
++		  g_free (line);
++		}
++	    }
++	}
++    }
++  else
++    {
++      if ((file = fopen (filename, "r")) != NULL)
++	{
++	  line = g_malloc (linelen);
++	  while (fgets (line, linelen, file))
++	    {
++	      while (strlen (line) == linelen - 1
++		     && line[strlen (line) - 1] == '\n')
++		{
++		  linelen += 1024;
++		  line = (gchar *) g_realloc (line, linelen);
++		  fgets (&line[strlen (line)], 1024, file);
++		}
++	      while (line[strlen (line) - 1] == '\r'
++		     || line[strlen (line) - 1] == '\n')
++		line[strlen (line) - 1] = '\0';
++	      playlist_add_file (line, filename);
++	    }
++	  fclose (file);
++	}
++    }
++}
++
++/* 
++ * show a directory in the CList pe_songlist browser
++ */
++static void
++update_songlist_dir (gchar * directory)
++{
++  DIR *dp;
++  struct dirent *ep;
++  gchar *tmp[4];
++  struct stat buf;
++  float size;
++  time_t *mtime;
++  regex_t *preg;
++  regmatch_t pmatch[2];
++  char buffer[TIMESTRINGSIZE];
++
++  g_free (current_path);
++  current_path = g_strdup (directory);
++
++  gtk_clist_set_column_title (GTK_CLIST (pe_songlist), 0, current_path);
++
++  dp = opendir (directory);
++  if (dp != NULL)
++    {
++      while (ep = readdir (dp))
++	{
++	  if (stat
++	      (g_strconcat (directory, "/", ep->d_name, NULL), &buf) == 0)
++	    if (S_ISREG (buf.st_mode))
++	      {
++
++
++		if (pecfg.enable_regexp)
++		  {
++		    pmatch[0].rm_so = 0;
++		    pmatch[0].rm_eo = 0;
++		    preg = malloc (sizeof (regex_t));
++		    regcomp (preg, pecfg.regexp, REG_EXTENDED);
++		    regexec (preg, ep->d_name, 1, pmatch, 0);
++		  }
++		if (!pecfg.enable_regexp || pmatch[0].rm_eo != 0)
++		  {
++		    tmp[0] = path_to_listentry (ep->d_name);
++		    size = (float) buf.st_size;
++		    if (size > 1024 * 1024)
++		      tmp[1] =
++			g_strdup_printf ("%10.2f Mb", size / (1024 * 1024));
++		    else if (buf.st_size > 1024 * 8)
++		      tmp[1] = g_strdup_printf ("%10.2f kb", size / 1024);
++		    else
++		      tmp[1] = g_strdup_printf ("%10.0f byte", size);
++
++		    mtime = &buf.st_mtime;
++		    strftime (buffer, TIMESTRINGSIZE, TIMESTRING,
++			      localtime (mtime));
++		    tmp[2] = g_strdup (buffer);
++		    tmp[3] = g_strconcat (directory, ep->d_name, NULL);
++		    gtk_clist_append (GTK_CLIST (pe_songlist), tmp);
++		  }
++	      }
++	}
++      closedir (dp);
++    }
++
++}
++
++/* 
++ * update the songlist as result of a selection in the Tree
++ * Decide wether to display a directory or a Playlist
++ * and then call the determined function
++ */
++static void
++update_songlist (gchar * directory)
++{
++  struct stat statbuf;
++  gchar *temp, *path;
++
++  clear_songlist ();
++  gtk_clist_freeze (GTK_CLIST (pe_songlist));
++
++
++  if (stat (directory, &statbuf) != -1 && S_ISDIR (statbuf.st_mode))
++    {
++      update_songlist_dir (directory);
++      gtk_clist_sort (GTK_CLIST (pe_songlist));
++    }
++  else
++    {
++/* this is a hack - because \ wont be accepted as delimters!
++ * this may not be the only part in this code where i use /
++ * and yet i dont know, if this will ever happen to be of interest :)
++ */
++      path = g_strdup (directory);
++      temp = strrchr (path, '/');
++      if (temp)
++	*temp = '\0';
++      if (stat (path, &statbuf) != -1 && S_ISREG (statbuf.st_mode))
++	{
++	  temp = strrchr (path, '.');
++	  if (temp
++	      && (!strcasecmp (temp, ".pls") || !strcasecmp (temp, ".m3u")))
++	    update_songlist_playlist (path);
++	}
++      g_free (path);
++      if (pecfg.sort_playlist)
++	gtk_clist_sort (GTK_CLIST (pe_songlist));
++    }
++
++  gtk_clist_thaw (GTK_CLIST (pe_songlist));
++}
++
++/*
++ * you just selected an entry in the List :)
++ * on double click add it (the selection) to the playlist 
++ */
++static void
++songlist_select (GtkWidget * w, gint row, gint column,
++		 GdkEventButton * bevent, gpointer data)
++{
++  if (bevent)
++    if (bevent->type == GDK_2BUTTON_PRESS)
++      playlist_add_files ();
++}
++
++/*
++ * radomly select a mp3-File
++ * by * selecting a random Tree-Node
++ *    * selecting a random Clist entry
++      * adding the selection to the xmms-playlist
++ */
++void
++pe_random_selection(gboolean auto_add)
++{
++  GtkCTreeNode *node, *tmp;
++  DirNode *dirnode;
++  gint i, rnd, level;
++  gchar *dummy[4] = { "dummy", "dummy", "dummy", "dummy" };
++
++  if (pecfg.random_root >= pecfg.number_of_tree_roots
++      || pecfg.random_root < 0)
++    return;
++  if (!pecfg.root_active[pecfg.random_root])
++    {
++/*
++ * pecfg.root_active[pecfg.random_root]=TRUE;
++ * pe_show_filebrowser ();
++ */
++      return;
++    }
++  if (!pe_gp.file_editor || !pe_songlist || !pe_tree)
++    pe_show_filebrowser ();
++  node = firstnode;
++
++  while (TRUE && node && pe_tree)
++    {
++      i = 0;
++/*
++ * this only stops on leaf nodes
++ * would be better to stop with a certain chance, if 
++ * node is no leaf, but contains some mp3s
++ */
++      if (GTK_CTREE_ROW (node)->is_leaf)
++	break;
++      gtk_ctree_expand (GTK_CTREE (pe_tree), node);
++      node = GTK_CTREE_ROW (node)->children;
++      level = GTK_CTREE_ROW (node)->level;
++      tmp = node;
++
++      while (tmp && GTK_CTREE_ROW (tmp)->level >= level)
++	{
++	  if (GTK_CTREE_ROW (tmp)->level == level)
++	    i++;
++	  tmp = GTK_CTREE_NODE_NEXT (tmp);
++	}
++      rnd = (int) ((float) i * rand () / (RAND_MAX + 1.0));
++      i = 0;
++      while (node && i < rnd)
++	{
++	  node = GTK_CTREE_NODE_NEXT (node);
++
++	  if (GTK_CTREE_ROW (node)->level == level)
++	    i++;
++	}
++    }
++  if (node && pe_songlist)
++    {
++      gtk_ctree_select (GTK_CTREE (pe_tree), node);
++      dirnode = gtk_ctree_node_get_row_data (GTK_CTREE (pe_tree), node);
++      update_songlist (dirnode->path);
++      gtk_clist_freeze (GTK_CLIST (pe_songlist));
++      i = gtk_clist_append (GTK_CLIST (pe_songlist), dummy);
++      gtk_clist_remove (GTK_CLIST (pe_songlist), i);
++      gtk_clist_thaw (GTK_CLIST (pe_songlist));
++      rnd = (int) ((float) i * rand () / (RAND_MAX + 1.0));
++      gtk_clist_select_row (GTK_CLIST (pe_songlist), rnd, 0);
++      if (auto_add)
++	playlist_add_files ();
++    }
++
++/*
++ *  else
++ *   printf ("some error occured!\n");
++ */
++
++}
++
++static void
++random_select ()
++{
++  pe_random_selection(pecfg.auto_add_random);
++}
++
++static void
++save_aped_size (GtkWidget * widget,
++		GtkAllocation * allocation, gpointer user_data)
++{
++  gdk_window_get_size (pe_gp.file_editor->window, &pecfg.size_w, &pecfg.size_h);
++}
++
++static void
++hide_main_aped(GtkWidget *w, gpointer data)
++{
++  if(pe_gp.file_editor!=NULL) {
++    gtk_widget_hide/*destroy*/(pe_gp.file_editor);
++    /*plugin->file_editor=NULL;*/
++  }
++}
++
++/*
++ * main things like displaying windows and 
++ * initialisation are done here
++ */
++GtkWidget *
++pe_show_filebrowser ()
++{
++  GtkWidget *main_aped = NULL;
++  GtkWidget *pe_lists, *pe_hbox, *ok, *cancel, *vbox, *sep, *bbox, *hpaned;
++  GtkWidget *scroll_a, *scroll_s, *random;
++  gchar *titlestring[4] = { " ", "Size", "Last Modified", "Path" };
++  gchar *node_text = "dummy";
++  gchar *root_text;
++  GtkCTreeNode *root_node, *node, *nextnode;
++  DirNode *dirnode;
++  gint i;
++  gboolean has_subdir;
++
++  if (pe_gp.file_editor!=NULL)
++    main_aped = pe_gp.file_editor;
++  else
++    {
++      main_aped = pe_gp.file_editor = gtk_window_new (GTK_WINDOW_TOPLEVEL);
++
++      gtk_signal_connect (GTK_OBJECT (main_aped), "destroy",
++			  GTK_SIGNAL_FUNC (gtk_widget_destroyed), &main_aped);
++      gtk_window_set_title (GTK_WINDOW (main_aped),
++			    "XMMS Advanced Playlist Editor");
++      gtk_window_set_policy (GTK_WINDOW (main_aped), FALSE, TRUE, FALSE);
++      gtk_window_set_position (GTK_WINDOW (main_aped), GTK_WIN_POS_MOUSE);
++      gtk_container_border_width (GTK_CONTAINER (main_aped), 10);
++      vbox = gtk_vbox_new (FALSE, 10);
++      gtk_container_add (GTK_CONTAINER (main_aped), vbox);
++
++      hpaned = gtk_hpaned_new ();
++      gtk_box_pack_start (GTK_BOX (vbox), hpaned, TRUE, TRUE, 4);
++
++
++      scroll_a = gtk_scrolled_window_new (NULL, NULL);
++      gtk_container_border_width (GTK_CONTAINER (scroll_a), 5);
++      gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll_a),
++				      GTK_POLICY_AUTOMATIC,
++				      GTK_POLICY_AUTOMATIC);
++      gtk_paned_add1 (GTK_PANED (hpaned), scroll_a);
++
++      gtk_widget_realize (main_aped);
++
++      if (!folder_pixmap)
++	{
++	  folder_pixmap =
++	    gdk_pixmap_create_from_xpm_d (main_aped->window, &folder_mask,
++					  NULL, folder);
++	  ofolder_pixmap =
++	    gdk_pixmap_create_from_xpm_d (main_aped->window, &ofolder_mask,
++					  NULL, ofolder);
++	  playlist_pixmap =
++	    gdk_pixmap_create_from_xpm_d (main_aped->window, &playlist_mask,
++					  NULL, playlist);
++	  record_pixmap =
++	    gdk_pixmap_create_from_xpm_d (main_aped->window, &record_mask,
++					  NULL, record);
++
++	}
++
++
++      pe_tree = gtk_ctree_new (1, 0);
++      gtk_clist_set_column_auto_resize (GTK_CLIST (pe_tree), 0, TRUE);
++      gtk_clist_set_selection_mode (GTK_CLIST (pe_tree),
++				    GTK_SELECTION_SINGLE);
++      gtk_ctree_set_line_style (GTK_CTREE (pe_tree), GTK_CTREE_LINES_DOTTED);
++      gtk_signal_connect (GTK_OBJECT (pe_tree), "tree_expand",
++			  GTK_SIGNAL_FUNC (expand_cb), NULL);
++      gtk_signal_connect (GTK_OBJECT (pe_tree), "select_row",
++			  GTK_SIGNAL_FUNC (select_row_cb), NULL);
++      gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scroll_a),
++					     pe_tree);
++      for (i = 0; i < pecfg.number_of_tree_roots; i++)
++	if (pecfg.root_active[i])
++	  {
++	    root_text = g_strdup (pecfg.tree_top[i]);
++	    if (check_for_subdir (pecfg.ls_path[i]))
++	      has_subdir = TRUE;
++	    else
++	      has_subdir = FALSE;
++
++	    root_node =
++	      gtk_ctree_insert_node (GTK_CTREE (pe_tree), NULL, NULL,
++				     &root_text, 4,
++				     has_subdir ? folder_pixmap :
++				     playlist_pixmap,
++				     has_subdir ? folder_mask : playlist_mask,
++				     ofolder_pixmap, ofolder_mask,
++				     !has_subdir, FALSE);
++	    if (i == pecfg.random_root)
++	      firstnode = root_node;
++
++	    dirnode = g_malloc0 (sizeof (DirNode));
++	    dirnode->path = g_strdup (pecfg.ls_path[i]);
++	    gtk_ctree_node_set_row_data_full (GTK_CTREE (pe_tree), root_node,
++					      dirnode, destroy_cb);
++	    if (has_subdir)
++	      node =
++		gtk_ctree_insert_node (GTK_CTREE (pe_tree), root_node, NULL,
++				       &node_text, 4, NULL, NULL, NULL, NULL,
++				       TRUE, TRUE);
++	    if (pecfg.expand_on_load[i])
++	      gtk_ctree_expand (GTK_CTREE (pe_tree), root_node);
++	  }
++      gtk_widget_show (pe_tree);
++
++
++      pe_songlist = gtk_clist_new_with_titles (4, titlestring);
++      gtk_clist_set_selection_mode (GTK_CLIST (pe_songlist),
++				    GTK_SELECTION_EXTENDED);
++      gtk_signal_connect (GTK_OBJECT (pe_songlist), "select_row",
++			  GTK_SIGNAL_FUNC (songlist_select), NULL);
++      gtk_signal_connect (GTK_OBJECT (pe_songlist), "unselect_row",
++			  GTK_SIGNAL_FUNC (songlist_select), NULL);
++      gtk_signal_connect (GTK_OBJECT (pe_songlist), "click-column",
++			  GTK_SIGNAL_FUNC (gtk_clist_select_all), NULL);
++      gtk_clist_set_column_justification (GTK_CLIST (pe_songlist), 0,
++					  GTK_JUSTIFY_LEFT);
++      gtk_clist_set_column_justification (GTK_CLIST (pe_songlist), 1,
++					  GTK_JUSTIFY_RIGHT);
++      gtk_clist_set_column_justification (GTK_CLIST (pe_songlist), 2,
++					  GTK_JUSTIFY_RIGHT);
++      gtk_clist_set_column_justification (GTK_CLIST (pe_songlist), 3,
++					  GTK_JUSTIFY_LEFT);
++      gtk_clist_column_title_active (GTK_CLIST (pe_songlist), 0);
++      gtk_clist_column_title_passive (GTK_CLIST (pe_songlist), 1);
++      gtk_clist_column_title_passive (GTK_CLIST (pe_songlist), 2);
++      gtk_clist_column_title_passive (GTK_CLIST (pe_songlist), 3);
++      gtk_clist_set_column_auto_resize (GTK_CLIST (pe_songlist), 0, TRUE);
++      gtk_clist_set_column_auto_resize (GTK_CLIST (pe_songlist), 1, TRUE);
++      gtk_clist_set_column_auto_resize (GTK_CLIST (pe_songlist), 2, TRUE);
++      gtk_clist_set_column_auto_resize (GTK_CLIST (pe_songlist), 3, TRUE);
++      gtk_clist_set_column_visibility (GTK_CLIST (pe_songlist), 0, TRUE);
++      gtk_clist_set_column_visibility (GTK_CLIST (pe_songlist), 1,
++				       pecfg.show_size);
++      gtk_clist_set_column_visibility (GTK_CLIST (pe_songlist), 2,
++				       pecfg.show_date);
++      gtk_clist_set_column_visibility (GTK_CLIST (pe_songlist), 3,
++				       pecfg.show_path);
++
++      scroll_s = gtk_scrolled_window_new (NULL, NULL);
++      gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scroll_s),
++					     pe_songlist);
++      gtk_container_border_width (GTK_CONTAINER (scroll_s), 5);
++      gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll_s),
++				      GTK_POLICY_AUTOMATIC,
++				      GTK_POLICY_AUTOMATIC);
++      gtk_paned_add2 (GTK_PANED (hpaned), scroll_s);
++
++
++      sep = gtk_hseparator_new ();
++      gtk_box_pack_start (GTK_BOX (vbox), sep, FALSE, FALSE, 0);
++      gtk_widget_show (sep);
++
++      bbox = gtk_hbutton_box_new ();
++      gtk_button_box_set_layout (GTK_BUTTON_BOX (bbox), GTK_BUTTONBOX_END);
++      gtk_button_box_set_spacing (GTK_BUTTON_BOX (bbox), 5);
++
++      random = gtk_button_new_with_label ("Random");
++      GTK_WIDGET_SET_FLAGS (random, GTK_CAN_DEFAULT);
++      gtk_box_pack_start (GTK_BOX (bbox), random, TRUE, TRUE, 0);
++      gtk_signal_connect (GTK_OBJECT (random), "clicked",
++			  GTK_SIGNAL_FUNC (random_select), NULL);
++      if (pecfg.show_random)
++	gtk_widget_show (random);
++
++      ok = gtk_button_new_with_label ("Add selected.");
++      gtk_object_set_user_data (GTK_OBJECT (ok), main_aped);
++      GTK_WIDGET_SET_FLAGS (ok, GTK_CAN_DEFAULT);
++      gtk_window_set_default (GTK_WINDOW (main_aped), ok);
++      gtk_box_pack_start (GTK_BOX (bbox), ok, TRUE, TRUE, 0);
++      gtk_signal_connect (GTK_OBJECT (ok), "clicked",
++			  GTK_SIGNAL_FUNC (playlist_add_files), NULL);
++      gtk_widget_show (ok);
++
++      cancel = gtk_button_new_with_label ("Done");
++      GTK_WIDGET_SET_FLAGS (cancel, GTK_CAN_DEFAULT);
++      gtk_box_pack_start (GTK_BOX (bbox), cancel, TRUE, TRUE, 0);
++      gtk_signal_connect_object (GTK_OBJECT (cancel), "clicked",
++				 GTK_SIGNAL_FUNC (hide_main_aped),
++				 (gpointer)NULL);
++      gtk_widget_show (cancel);
++
++      gtk_box_pack_start (GTK_BOX (vbox), bbox, FALSE, FALSE, 0);
++      gtk_widget_show (bbox);
++      gtk_widget_show (vbox);
++
++      gtk_widget_set_usize (scroll_a, 100, 100);
++      gtk_widget_set_usize (scroll_s, 100, 100);
++
++      if (pecfg.save_size)
++	gtk_window_set_default_size (GTK_WINDOW (main_aped), pecfg.size_w,
++				     pecfg.size_h);
++      else
++	gtk_window_set_default_size (GTK_WINDOW (main_aped), 500, 560);
++
++      gtk_widget_show (scroll_a);
++      gtk_widget_show (pe_songlist);
++      gtk_widget_show (scroll_s);
++      gtk_widget_show (hpaned);
++      gtk_widget_show (main_aped);
++      gtk_signal_connect (GTK_OBJECT (main_aped), "size-allocate",
++			  GTK_SIGNAL_FUNC (save_aped_size), NULL);
++
++    }
++
++  if (!GTK_WIDGET_VISIBLE (main_aped))
++    gtk_widget_show (main_aped);
++
++
++  gtk_drag_source_set(pe_songlist,GDK_BUTTON1_MASK,target_table, n_targets,GDK_ACTION_COPY);
++  gtk_signal_connect (GTK_OBJECT(pe_songlist), "drag_data_get",dragged,NULL);
++  return main_aped;
++}
+diff -Naurd xmms-1.2.4/General/playlist_ed/configure.c xmms-1.2.4-ape/General/playlist_ed/configure.c
+--- xmms-1.2.4/General/playlist_ed/configure.c	Wed Dec 31 23:00:00 1969
++++ xmms-1.2.4-ape/General/playlist_ed/configure.c	Thu Apr 19 01:21:11 2001
+@@ -0,0 +1,500 @@
++/*  APED plugin for xmms by Robin Gareus (robin@gareus.de)
++ *  Advanced Playlist EDitor
++ *
++ *  X11amp is Copyright (C) 1998-1999  Peter Alm, Mikael Alm, Olle Hallnas, ThomNilsson and 4Front Technologies
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *
++ *
++ * Version 0.1 hacked 26-28. April 2000
++ *    main things that everyithing seems to work fine on my machine...
++ * Version 0.2        16. May 2000
++ *    added some Options ( i like Options :-)
++ */
++
++
++#include "pe.h"
++
++/*static gboolean keepConfGoing;*/
++gboolean peconf_is_going = FALSE;
++static GtkWidget *peconf_mainwin;
++static GtkWidget *prefs_ls_path[4], *prefs_tree_top[4];
++static GtkWidget *prefs_expand_on_load[4], *prefs_root_active[4];
++static GtkWidget *prefs_strip_extension, *prefs_playlistname;
++static GtkWidget *prefs_enable_regexp, *prefs_regexp;
++static GtkWidget *prefs_replace_index, *prefs_indexname, *prefs_recordname;
++static GtkWidget *prefs_show_size, *prefs_show_path, *prefs_auto_random;
++static GtkWidget *prefs_random_root, *prefs_show_random, *prefs_sort_playlist;
++static GtkWidget *prefs_auto_add_random, *prefs_save_size, *prefs_show_date;
++static GtkWidget *prefs_number_of_tree_roots, *prefs_rescan, *prefs_drag_order;
++
++/*
++ * ok get the configuration, save it and exit
++ */
++static void
++peconf_ok_cb (GtkWidget * w, gpointer data)
++{
++  gint i;
++
++  for (i = 0; i < pecfg.number_of_tree_roots; i++)
++    {
++      pecfg.ls_path[i] =
++	g_strdup (gtk_entry_get_text (GTK_ENTRY (prefs_ls_path[i])));
++      if (pecfg.ls_path[i][strlen (pecfg.ls_path[i]) - 1] != '/')
++	pecfg.ls_path[i] = g_strconcat (pecfg.ls_path[i], "/", NULL);
++      pecfg.tree_top[i] =
++	g_strdup (gtk_entry_get_text (GTK_ENTRY (prefs_tree_top[i])));
++      pecfg.root_active[i] = GTK_TOGGLE_BUTTON (prefs_root_active[i])->active;
++      pecfg.expand_on_load[i] =
++	GTK_TOGGLE_BUTTON (prefs_expand_on_load[i])->active;
++    }
++  pecfg.strip_extension = GTK_TOGGLE_BUTTON (prefs_strip_extension)->active;
++  pecfg.playlistname =
++    g_strdup (gtk_entry_get_text (GTK_ENTRY (prefs_playlistname)));
++  pecfg.enable_regexp = !(GTK_TOGGLE_BUTTON (prefs_enable_regexp)->active);
++  pecfg.regexp = g_strdup (gtk_entry_get_text (GTK_ENTRY (prefs_regexp)));
++  pecfg.replace_index = (GTK_TOGGLE_BUTTON (prefs_replace_index)->active);
++  pecfg.indexname =
++    g_strdup (gtk_entry_get_text (GTK_ENTRY (prefs_indexname)));
++  pecfg.recordname =
++    g_strdup (gtk_entry_get_text (GTK_ENTRY (prefs_recordname)));
++  pecfg.show_size = (GTK_TOGGLE_BUTTON (prefs_show_size)->active);
++  pecfg.rescan = (GTK_TOGGLE_BUTTON (prefs_rescan)->active);
++  pecfg.drag_order = (GTK_TOGGLE_BUTTON (prefs_drag_order)->active);
++  pecfg.show_date = (GTK_TOGGLE_BUTTON (prefs_show_date)->active);
++  pecfg.show_path = (GTK_TOGGLE_BUTTON (prefs_show_path)->active);
++  pecfg.auto_random = (GTK_TOGGLE_BUTTON (prefs_auto_random)->active);
++  pecfg.show_random = (GTK_TOGGLE_BUTTON (prefs_show_random)->active);
++  sscanf (gtk_entry_get_text (GTK_ENTRY (prefs_random_root)), "%u",
++	  &pecfg.random_root);
++  pecfg.sort_playlist = (GTK_TOGGLE_BUTTON (prefs_sort_playlist)->active);
++  pecfg.auto_add_random = (GTK_TOGGLE_BUTTON (prefs_auto_add_random)->active);
++  pecfg.save_size = (GTK_TOGGLE_BUTTON (prefs_save_size)->active);
++  sscanf (gtk_entry_get_text (GTK_ENTRY (prefs_number_of_tree_roots)), "%u",
++	  &pecfg.number_of_tree_roots_new);
++  if (pecfg.number_of_tree_roots_new > MAXIMUMROOTS)
++    pecfg.number_of_tree_roots_new = MAXIMUMROOTS;
++  if (pecfg.number_of_tree_roots_new < 1)
++    pecfg.number_of_tree_roots_new = 1;
++
++  peapp_save_config ();
++  gtk_widget_destroy (peconf_mainwin);
++}
++
++/*
++ * reload the old config and leave
++ */
++static void
++peconf_cancel_cb (GtkWidget * w, gpointer data)
++{
++  peapp_read_config ();
++  gtk_widget_destroy (peconf_mainwin);
++}
++
++/*
++ * show config window
++ * this is not very nice - belive me! widget in wodget in widget in widget
++ */
++void
++pe_configure (void)
++{
++  GtkWidget *vbox, *notebook, *box, *frame, *button, *vbox2, *vbox3;
++  GtkWidget *p_frame[4], *label_1[4], *label_2[4], *option_table[4];
++  GtkWidget *vbox4, *table, *label_3, *table_2, *label_4, *frame_2, *vbox5;
++  GtkWidget *label_5, *label_6, *label_7, *vbox6, *frame_3, *table_3;
++  GtkWidget *frame_4, *table_4, *scrolly, *label_8, *frame_5, *table_5;
++  GtkWidget *vbox7, *label_9;
++  gint i;
++  gchar *temp;
++
++  peapp_read_config ();
++  if (!peconf_mainwin)
++    {
++
++      peconf_mainwin = gtk_window_new (GTK_WINDOW_DIALOG);
++      gtk_signal_connect (GTK_OBJECT (peconf_mainwin), "destroy",
++			  GTK_SIGNAL_FUNC (gtk_widget_destroyed),
++			  &peconf_mainwin);
++      gtk_window_set_title (GTK_WINDOW (peconf_mainwin),
++			    "XMMS Advanced Playlist Editor Configuration");
++      gtk_window_set_policy (GTK_WINDOW (peconf_mainwin), FALSE, FALSE,
++			     FALSE);
++      gtk_window_set_position (GTK_WINDOW (peconf_mainwin),
++			       GTK_WIN_POS_MOUSE);
++      gtk_container_border_width (GTK_CONTAINER (peconf_mainwin), 10);
++
++      vbox = gtk_vbox_new (FALSE, 10);
++      gtk_container_add (GTK_CONTAINER (peconf_mainwin), vbox);
++
++      notebook = gtk_notebook_new ();
++      gtk_box_pack_start (GTK_BOX (vbox), notebook, TRUE, TRUE, 0);
++
++
++      vbox7 = gtk_vbox_new (FALSE, 5);
++      frame_5 = gtk_frame_new ("Settings");
++      gtk_box_pack_start (GTK_BOX (vbox7), frame_5, FALSE, FALSE, 5);
++      table_5 = gtk_table_new (2, 4, FALSE);
++      gtk_container_add (GTK_CONTAINER (frame_5), table_5);
++
++      label_8 = gtk_label_new ("Number of Root Nodes: ");
++      gtk_table_attach_defaults (GTK_TABLE (table_5), label_8, 0, 1, 0, 1);
++      gtk_widget_show (label_8);
++      prefs_number_of_tree_roots = gtk_entry_new_with_max_length (2);
++      gtk_widget_set_usize (prefs_number_of_tree_roots, 14, -1);
++      temp = g_strdup_printf ("%u", pecfg.number_of_tree_roots_new);
++      gtk_entry_set_text (GTK_ENTRY (prefs_number_of_tree_roots), temp);
++      g_free (temp);
++      gtk_table_attach_defaults (GTK_TABLE (table_5),
++				 prefs_number_of_tree_roots, 1, 2, 0, 1);
++      gtk_widget_show (prefs_number_of_tree_roots);
++
++      prefs_rescan =
++	gtk_check_button_new_with_label ("Do not Cache Directorys");
++      gtk_table_attach_defaults (GTK_TABLE (table_5), prefs_rescan, 0, 2,
++				 1, 2);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_rescan),
++				    pecfg.rescan);
++      gtk_widget_show (prefs_rescan);
++
++      prefs_drag_order =
++	gtk_check_button_new_with_label ("Ignore Order of Drag'n'Drop Selection");
++      gtk_table_attach_defaults (GTK_TABLE (table_5), prefs_drag_order, 0, 2,
++				 2, 3);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_drag_order),
++				    pecfg.drag_order);
++      gtk_widget_show (prefs_drag_order);
++
++      label_9 =
++	gtk_label_new
++	("\nYou have to restart APED\n in order to make this change take effect.");
++      gtk_table_attach_defaults (GTK_TABLE (table_5), label_9, 0, 2, 3, 4);
++      gtk_widget_show (label_9);
++
++      gtk_widget_show (vbox7);
++      gtk_widget_show (frame_5);
++      gtk_widget_show (table_5);
++
++      gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox7,
++				gtk_label_new ("Tree Options"));
++
++
++      vbox2 = gtk_vbox_new (FALSE, 5);
++
++      for (i = 0; i < pecfg.number_of_tree_roots; i++)
++	{
++	  temp = g_strdup_printf ("Root Node %i :", i);
++	  p_frame[i] = gtk_frame_new (temp);
++
++	  gtk_box_pack_start (GTK_BOX (vbox2), p_frame[i], FALSE, FALSE, 5);
++
++	  option_table[i] = gtk_table_new (2, 4, FALSE);
++	  gtk_container_add (GTK_CONTAINER (p_frame[i]), option_table[i]);
++
++	  prefs_root_active[i] = gtk_check_button_new_with_label ("Activate");
++	  gtk_table_attach_defaults (GTK_TABLE (option_table[i]),
++				     prefs_root_active[i], 0, 1, 0, 1);
++	  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON
++					(prefs_root_active[i]),
++					pecfg.root_active[i]);
++	  gtk_widget_show (prefs_root_active[i]);
++
++
++	  prefs_expand_on_load[i] =
++	    gtk_check_button_new_with_label ("Expand on Load");
++	  gtk_table_attach_defaults (GTK_TABLE (option_table[i]),
++				     prefs_expand_on_load[i], 0, 1, 1, 2);
++	  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON
++					(prefs_expand_on_load[i]),
++					pecfg.expand_on_load[i]);
++	  gtk_widget_show (prefs_expand_on_load[i]);
++
++	  label_1[i] = gtk_label_new ("mp3-directory: ");
++	  gtk_table_attach_defaults (GTK_TABLE (option_table[i]), label_1[i],
++				     0, 1, 2, 3);
++	  gtk_widget_show (label_1[i]);
++	  prefs_ls_path[i] = gtk_entry_new ();
++	  gtk_entry_set_text (GTK_ENTRY (prefs_ls_path[i]), pecfg.ls_path[i]);
++	  gtk_widget_set_usize (prefs_ls_path[i], 150, -1);
++	  gtk_table_attach_defaults (GTK_TABLE (option_table[i]),
++				     prefs_ls_path[i], 1, 2, 2, 3);
++	  gtk_widget_show (prefs_ls_path[i]);
++
++
++	  label_2[i] = gtk_label_new ("Root Tree Entry: ");
++	  gtk_table_attach_defaults (GTK_TABLE (option_table[i]), label_2[i],
++				     0, 1, 3, 4);
++	  gtk_widget_show (label_2[i]);
++	  prefs_tree_top[i] = gtk_entry_new ();
++	  gtk_entry_set_text (GTK_ENTRY (prefs_tree_top[i]),
++			      pecfg.tree_top[i]);
++	  gtk_widget_set_usize (prefs_tree_top[i], 150, -1);
++	  gtk_table_attach_defaults (GTK_TABLE (option_table[i]),
++				     prefs_tree_top[i], 1, 2, 3, 4);
++	  gtk_widget_show (prefs_tree_top[i]);
++
++	  gtk_widget_show (option_table[i]);
++	  gtk_widget_show (p_frame[i]);
++
++	}
++      gtk_widget_show (vbox2);
++      gtk_widget_show (vbox);
++
++      if (pecfg.number_of_tree_roots < 4)
++	gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox2,
++				  gtk_label_new ("Node Options"));
++      else
++	{
++	  scrolly = gtk_scrolled_window_new (NULL, NULL);
++	  gtk_container_border_width (GTK_CONTAINER (scrolly), 5);
++	  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolly),
++					  GTK_POLICY_NEVER,
++					  GTK_POLICY_AUTOMATIC);
++	  gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW
++						 (scrolly), vbox2);
++	  gtk_notebook_append_page (GTK_NOTEBOOK (notebook), scrolly,
++				    gtk_label_new ("Tree Options"));
++
++
++	  gtk_widget_show (scrolly);
++	}
++
++      vbox3 = gtk_vbox_new (FALSE, 5);
++      vbox4 = gtk_vbox_new (FALSE, 5);
++      frame = gtk_frame_new ("Playlist Settings:");
++      gtk_box_pack_start (GTK_BOX (vbox3), frame, FALSE, FALSE, 5);
++      gtk_container_add (GTK_CONTAINER (frame), vbox4);
++
++      table = gtk_table_new (2, 6, FALSE);
++      gtk_box_pack_start (GTK_BOX (vbox4), table, FALSE, FALSE, 5);
++
++      prefs_sort_playlist =
++	gtk_check_button_new_with_label
++	("Show Playlist files sorted alphabetically.");
++      gtk_table_attach_defaults (GTK_TABLE (table), prefs_sort_playlist, 0, 2,
++				 0, 1);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_sort_playlist),
++				    pecfg.sort_playlist);
++      gtk_widget_show (prefs_sort_playlist);
++
++      prefs_strip_extension =
++	gtk_check_button_new_with_label ("Strip extension of Playlist File");
++      gtk_table_attach_defaults (GTK_TABLE (table), prefs_strip_extension, 0,
++				 2, 1, 2);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_strip_extension),
++				    pecfg.strip_extension);
++      gtk_widget_show (prefs_strip_extension);
++
++      label_3 = gtk_label_new ("Prefix for Treeentry: ");
++      gtk_table_attach_defaults (GTK_TABLE (table), label_3, 0, 1, 2, 3);
++      gtk_widget_show (label_3);
++      prefs_playlistname = gtk_entry_new ();
++      gtk_entry_set_text (GTK_ENTRY (prefs_playlistname), pecfg.playlistname);
++      gtk_widget_set_usize (prefs_playlistname, 150, -1);
++      gtk_table_attach_defaults (GTK_TABLE (table),
++				 prefs_playlistname, 1, 2, 2, 3);
++      gtk_widget_show (prefs_playlistname);
++
++
++
++      prefs_replace_index =
++	gtk_check_button_new_with_label
++	("Replace Index-Filename by Recordstring :");
++      gtk_table_attach_defaults (GTK_TABLE (table), prefs_replace_index, 0, 2,
++				 3, 4);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_replace_index),
++				    pecfg.replace_index);
++      gtk_widget_show (prefs_replace_index);
++
++      label_5 = gtk_label_new ("Indexfile: ");
++      gtk_table_attach_defaults (GTK_TABLE (table), label_5, 0, 1, 4, 5);
++      gtk_widget_show (label_5);
++      prefs_indexname = gtk_entry_new ();
++      gtk_entry_set_text (GTK_ENTRY (prefs_indexname), pecfg.indexname);
++      gtk_widget_set_usize (prefs_indexname, 150, -1);
++      gtk_table_attach_defaults (GTK_TABLE (table),
++				 prefs_indexname, 1, 2, 4, 5);
++      gtk_widget_show (prefs_indexname);
++
++      label_6 = gtk_label_new ("Recordstring: ");
++      gtk_table_attach_defaults (GTK_TABLE (table), label_6, 0, 1, 5, 6);
++      gtk_widget_show (label_6);
++      prefs_recordname = gtk_entry_new ();
++      gtk_entry_set_text (GTK_ENTRY (prefs_recordname), pecfg.recordname);
++      gtk_widget_set_usize (prefs_recordname, 150, -1);
++      gtk_table_attach_defaults (GTK_TABLE (table),
++				 prefs_recordname, 1, 2, 5, 6);
++      gtk_widget_show (prefs_recordname);
++
++
++      gtk_widget_show (frame);
++      gtk_widget_show (table);
++      gtk_widget_show (vbox4);
++
++      vbox5 = gtk_vbox_new (FALSE, 5);
++      frame_2 = gtk_frame_new ("File List Appearance:");
++      gtk_box_pack_start (GTK_BOX (vbox3), frame_2, FALSE, FALSE, 5);
++      gtk_container_add (GTK_CONTAINER (frame_2), vbox5);
++
++      table_2 = gtk_table_new (2, 4, FALSE);
++      gtk_box_pack_start (GTK_BOX (vbox5), table_2, FALSE, FALSE, 5);
++
++      prefs_show_size =
++	gtk_check_button_new_with_label ("Show \"SIZE\" Column in File-List");
++      gtk_table_attach_defaults (GTK_TABLE (table_2), prefs_show_size, 0, 2,
++				 0, 1);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_show_size),
++				    pecfg.show_size);
++      gtk_widget_show (prefs_show_size);
++
++      prefs_show_date =
++	gtk_check_button_new_with_label
++	("Show \"Last Modified\" Column in File-List");
++      gtk_table_attach_defaults (GTK_TABLE (table_2), prefs_show_date, 0, 2,
++				 1, 2);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_show_date),
++				    pecfg.show_date);
++      gtk_widget_show (prefs_show_date);
++
++      prefs_show_path =
++	gtk_check_button_new_with_label ("Show \"PATH\" Column in File-List");
++      gtk_table_attach_defaults (GTK_TABLE (table_2), prefs_show_path, 0, 2,
++				 2, 3);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_show_path),
++				    pecfg.show_path);
++      gtk_widget_show (prefs_show_path);
++
++      prefs_enable_regexp =
++	gtk_check_button_new_with_label ("Show all Files");
++      gtk_table_attach_defaults (GTK_TABLE (table_2), prefs_enable_regexp, 0,
++				 2, 3, 4);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_enable_regexp),
++				    !pecfg.enable_regexp);
++      gtk_widget_show (prefs_enable_regexp);
++
++      label_4 = gtk_label_new ("RegExp - File Filter: ");
++      gtk_table_attach_defaults (GTK_TABLE (table_2), label_4, 0, 1, 4, 5);
++      gtk_widget_show (label_4);
++      prefs_regexp = gtk_entry_new ();
++      gtk_entry_set_text (GTK_ENTRY (prefs_regexp), pecfg.regexp);
++      gtk_widget_set_usize (prefs_regexp, 150, -1);
++      gtk_table_attach_defaults (GTK_TABLE (table_2),
++				 prefs_regexp, 1, 2, 4, 5);
++      gtk_widget_show (prefs_regexp);
++
++      gtk_widget_show (frame_2);
++      gtk_widget_show (table_2);
++      gtk_widget_show (vbox5);
++
++      gtk_widget_show (vbox3);
++
++      gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox3,
++				gtk_label_new ("Playlist"));
++
++
++
++      vbox6 = gtk_vbox_new (FALSE, 5);
++      frame_3 = gtk_frame_new ("Random File Selection");
++      gtk_box_pack_start (GTK_BOX (vbox6), frame_3, FALSE, FALSE, 5);
++
++      table_3 = gtk_table_new (2, 4, FALSE);
++      gtk_container_add (GTK_CONTAINER (frame_3), table_3);
++
++      prefs_show_random =
++	gtk_check_button_new_with_label
++	("Enable \"Select Random\" Button in APED.");
++      gtk_table_attach_defaults (GTK_TABLE (table_3), prefs_show_random, 0, 2,
++				 0, 1);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_show_random),
++				    pecfg.show_random);
++      gtk_widget_show (prefs_show_random);
++
++      prefs_auto_add_random =
++	gtk_check_button_new_with_label ("Auto add files on random button.");
++      gtk_table_attach_defaults (GTK_TABLE (table_3), prefs_auto_add_random,
++				 0, 2, 1, 2);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_auto_add_random),
++				    pecfg.auto_add_random);
++      gtk_widget_show (prefs_auto_add_random);
++
++      prefs_auto_random =
++	gtk_check_button_new_with_label
++	("Auto select File when actual Playlist is over.");
++      gtk_table_attach_defaults (GTK_TABLE (table_3), prefs_auto_random, 0, 2,
++				 2, 3);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_auto_random),
++				    pecfg.auto_random);
++      gtk_widget_show (prefs_auto_random);
++
++      label_7 = gtk_label_new ("Select Random Files from Root Node #: ");
++      gtk_table_attach_defaults (GTK_TABLE (table_3), label_7, 0, 1, 3, 4);
++      gtk_widget_show (label_7);
++      prefs_random_root = gtk_entry_new_with_max_length (1);
++      gtk_widget_set_usize (prefs_random_root, 14, -1);
++      temp = g_strdup_printf ("%u", pecfg.random_root);
++      gtk_entry_set_text (GTK_ENTRY (prefs_random_root), temp);
++      g_free (temp);
++      gtk_table_attach_defaults (GTK_TABLE (table_3),
++				 prefs_random_root, 1, 2, 3, 4);
++      gtk_widget_show (prefs_random_root);
++
++      gtk_widget_show (table_3);
++      gtk_widget_show (frame_3);
++
++
++      frame_4 = gtk_frame_new ("Window Display Options");
++      gtk_box_pack_start (GTK_BOX (vbox6), frame_4, FALSE, FALSE, 5);
++
++      table_4 = gtk_table_new (1, 1, FALSE);
++      gtk_container_add (GTK_CONTAINER (frame_4), table_4);
++
++      prefs_save_size = gtk_check_button_new_with_label ("Save Window Size");
++      gtk_table_attach_defaults (GTK_TABLE (table_4), prefs_save_size, 0, 1,
++				 0, 1);
++      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (prefs_save_size),
++				    pecfg.save_size);
++      gtk_widget_show (prefs_save_size);
++
++      gtk_widget_show (table_4);
++      gtk_widget_show (frame_4);
++
++      gtk_widget_show (vbox6);
++
++      gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox6,
++				gtk_label_new ("Extra"));
++
++
++      gtk_widget_show (notebook);
++
++      box = gtk_hbutton_box_new ();
++      gtk_button_box_set_layout (GTK_BUTTON_BOX (box), GTK_BUTTONBOX_END);
++      gtk_button_box_set_spacing (GTK_BUTTON_BOX (box), 5);
++      gtk_box_pack_start (GTK_BOX (vbox), box, FALSE, FALSE, 0);
++
++      button = gtk_button_new_with_label ("Ok");
++      gtk_signal_connect (GTK_OBJECT (button), "clicked",
++			  GTK_SIGNAL_FUNC (peconf_ok_cb), NULL);
++      GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
++      gtk_box_pack_start (GTK_BOX (box), button, TRUE, TRUE, 0);
++      gtk_widget_grab_default (button);
++      gtk_widget_show (button);
++
++      button = gtk_button_new_with_label ("Cancel");
++      gtk_signal_connect (GTK_OBJECT (button), "clicked",
++			  GTK_SIGNAL_FUNC (peconf_cancel_cb), NULL);
++      GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
++      gtk_box_pack_start (GTK_BOX (box), button, TRUE, TRUE, 0);
++
++      gtk_widget_show (button);
++      gtk_widget_show (box);
++      gtk_widget_show (peconf_mainwin);
++    }
++}
+diff -Naurd xmms-1.2.4/General/playlist_ed/pe.c xmms-1.2.4-ape/General/playlist_ed/pe.c
+--- xmms-1.2.4/General/playlist_ed/pe.c	Wed Dec 31 23:00:00 1969
++++ xmms-1.2.4-ape/General/playlist_ed/pe.c	Sat Apr 21 19:38:22 2001
+@@ -0,0 +1,401 @@
++/*  APED plugin for xmms by Robin Gareus (robin@gareus.de)
++ *  Advanced Playlist EDitor
++ *
++ *  X11amp is Copyright (C) 1998-1999  Peter Alm, Mikael Alm, Olle Hallnas, ThomNilsson and 4Front Technologies
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *
++ *
++ * Version 0.1 hacked 26-28. April 2000
++ *    main things that everyithing seems to work fine on my machine...
++ * Version 0.2        16. May 2000
++ *    changed things to work with dynamic # of root-nodes
++ *    minor bug fixes
++ */
++
++#include "pe.h"
++
++static void init (void);
++static void cleanup (void);
++void peapp_read_config (void);
++void peapp_save_config (void);
++
++static gint timeout_func (gpointer);
++static gint timeout_tag = 0;
++static gboolean possible_pl_end;
++
++/*extern GtkWidget *filebrowser;*/
++
++peConfig pecfg;
++
++static void pe_show_url_editor(PlaylistEditorPlugin *plugin, GtkWidget *w);
++static void pe_show_dir_editor(PlaylistEditorPlugin *plugin, GtkWidget *w);
++static void pe_show_file_editor(PlaylistEditorPlugin *plugin, GtkWidget *w);
++
++PlaylistEditorPlugin pe_gp = {
++  {
++    NULL,				/* handle */
++    NULL,				/* filename */
++    -1,				/* xmms_session */
++    "Advanced Playlist Editor " VERSION,
++    init,
++    pe_about,
++    pe_configure,
++    cleanup
++  },
++  NULL,NULL,NULL,
++  pe_show_url_editor,
++  pe_show_dir_editor,
++  pe_show_file_editor
++};
++
++PlaylistEditorPlugin *
++get_peplugin_info (void)
++{
++  return &pe_gp;
++}
++
++static void
++init (void)
++{
++  peapp_read_config ();
++  timeout_tag = gtk_timeout_add (100, timeout_func, NULL);
++}
++
++static void
++cleanup (void)
++{
++  g_free(pe_gp.super.filename); // strdup()'ed in xmms/pluginenum.c
++  
++  if (timeout_tag)
++    gtk_timeout_remove (timeout_tag);
++  timeout_tag = 0;
++  if (pecfg.save_size)
++    peapp_save_config ();
++  signal (SIGCHLD, SIG_DFL);
++}
++
++/*
++ * load the config file
++ *
++ * note: though browser.c can support dynamically any number of
++ * tree_root nodes, i havent found a suitable implementation 
++ * for the configuration window.
++ * i thought 3 are enough - so far. if you want more, just increase
++ * the array size in the pe.h and set the number_of_tree_roots.
++ * 
++ * in the next Version the array will be raplaced by a linear list
++ * stay tuned
++ *
++ * the char-translate can not be configuered, too, because i couldnt figure
++ * out, how to save strings containing spaces with the xmms functions
++ * but the config defaults are set here.
++ * when i hear nothing from you, i will save the hex-codes of the chars
++ * in a string, next Version.
++ */
++void
++peapp_read_config (void)
++{
++  ConfigFile *cfgfile;
++  gchar *filename, *tmp;
++  gint i;
++  gboolean read_config = FALSE;
++  pecfg.number_of_tree_roots = 3;
++  pecfg.random_root = 0;
++  pecfg.auto_random = FALSE;
++  pecfg.show_random = FALSE;
++  pecfg.show_size = TRUE;
++  pecfg.show_date = TRUE;
++  pecfg.show_path = TRUE;
++  pecfg.rescan = TRUE;
++  pecfg.drag_order = TRUE;
++  pecfg.sort_playlist = FALSE;
++
++  pecfg.transl_to = strdup (" ");
++  pecfg.transl_from = strdup ("_");
++
++  pecfg.playlistname = strdup ("Playlist");
++  pecfg.strip_extension = FALSE;
++  pecfg.regexp = strdup ("\\.(mp3|m3u|pls)$");
++  pecfg.enable_regexp = FALSE;
++  pecfg.indexname = strdup ("00index.m3u");
++  pecfg.recordname = strdup ("Record-Index");
++  pecfg.replace_index = FALSE;
++  pecfg.auto_add_random = TRUE;
++  pecfg.save_size = TRUE;
++  pecfg.size_w = 500;
++  pecfg.size_h = 560;
++
++
++  filename = g_strconcat (g_get_home_dir (), "/.xmms/config", NULL);
++  cfgfile = xmms_cfg_open_file (filename);
++  if (cfgfile)
++    {
++      xmms_cfg_read_int (cfgfile, "aped", "number_of_tree_roots",
++			 &pecfg.number_of_tree_roots);
++      if (pecfg.number_of_tree_roots > MAXIMUMROOTS)
++	pecfg.number_of_tree_roots = MAXIMUMROOTS;
++      if (pecfg.number_of_tree_roots < 1)
++	pecfg.number_of_tree_roots = 1;
++
++      pecfg.ls_path =
++	malloc ((pecfg.number_of_tree_roots + 1) * sizeof (gchar *));
++      pecfg.tree_top =
++	malloc ((pecfg.number_of_tree_roots + 1) * sizeof (gchar *));
++      pecfg.root_active =
++	malloc ((pecfg.number_of_tree_roots + 1) * sizeof (gboolean));
++      pecfg.expand_on_load =
++	malloc ((pecfg.number_of_tree_roots + 1) * sizeof (gboolean));
++      for (i = 0; i < pecfg.number_of_tree_roots; i++)
++	{
++	  tmp = g_strdup_printf ("ls_path_%i", i);
++	  xmms_cfg_read_string (cfgfile, "aped", tmp, &pecfg.ls_path[i]);
++	  g_free (tmp);
++	  tmp = g_strdup_printf ("tree_top_%i", i);
++	  xmms_cfg_read_string (cfgfile, "aped", tmp, &pecfg.tree_top[i]);
++	  g_free (tmp);
++	  tmp = g_strdup_printf ("root_active_%i", i);
++	  xmms_cfg_read_boolean (cfgfile, "aped", tmp, &pecfg.root_active[i]);
++	  g_free (tmp);
++	  tmp = g_strdup_printf ("expand_on_load_%i", i);
++	  xmms_cfg_read_boolean (cfgfile, "aped", tmp,
++				 &pecfg.expand_on_load[i]);
++	  g_free (tmp);
++	}
++
++      xmms_cfg_read_string (cfgfile, "aped", "playlistname",
++			    &pecfg.playlistname);
++      xmms_cfg_read_boolean (cfgfile, "aped", "strip_extension",
++			     &pecfg.strip_extension);
++      xmms_cfg_read_string (cfgfile, "aped", "regexp", &pecfg.regexp);
++      xmms_cfg_read_boolean (cfgfile, "aped", "enable_regexp",
++			     &pecfg.enable_regexp);
++      xmms_cfg_read_string (cfgfile, "aped", "indexname", &pecfg.indexname);
++      xmms_cfg_read_string (cfgfile, "aped", "recordname", &pecfg.recordname);
++      xmms_cfg_read_boolean (cfgfile, "aped", "replace_index",
++			     &pecfg.replace_index);
++      xmms_cfg_read_boolean (cfgfile, "aped", "show_size", &pecfg.show_size);
++      xmms_cfg_read_boolean (cfgfile, "aped", "show_date", &pecfg.show_date);
++      xmms_cfg_read_boolean (cfgfile, "aped", "show_path", &pecfg.show_path);
++      xmms_cfg_read_boolean (cfgfile, "aped", "rescan", &pecfg.rescan);
++      xmms_cfg_read_boolean (cfgfile, "aped", "drag_order", &pecfg.drag_order);
++      xmms_cfg_read_boolean (cfgfile, "aped", "show_random",
++			     &pecfg.show_random);
++      xmms_cfg_read_boolean (cfgfile, "aped", "auto_random",
++			     &pecfg.auto_random);
++      xmms_cfg_read_int (cfgfile, "aped", "random_root", &pecfg.random_root);
++      xmms_cfg_read_boolean (cfgfile, "aped", "sort_playlist",
++			     &pecfg.sort_playlist);
++      xmms_cfg_read_boolean (cfgfile, "aped", "auto_add_random",
++			     &pecfg.auto_add_random);
++      xmms_cfg_read_int (cfgfile, "aped", "size_w", &pecfg.size_w);
++      xmms_cfg_read_int (cfgfile, "aped", "size_h", &pecfg.size_h);
++      xmms_cfg_read_boolean (cfgfile, "aped", "save_size", &pecfg.save_size);
++      xmms_cfg_read_boolean (cfgfile, "aped", "config", &read_config);
++
++      xmms_cfg_free (cfgfile);
++    }
++  if (!read_config)
++    {
++      pecfg.ls_path =
++	malloc ((pecfg.number_of_tree_roots + 1) * sizeof (gchar *));
++      pecfg.tree_top =
++	malloc ((pecfg.number_of_tree_roots + 1) * sizeof (gchar *));
++      pecfg.root_active =
++	malloc ((pecfg.number_of_tree_roots + 1) * sizeof (gboolean));
++      pecfg.expand_on_load =
++	malloc ((pecfg.number_of_tree_roots + 1) * sizeof (gboolean));
++
++      if (pecfg.number_of_tree_roots > 0)
++	{
++	  pecfg.ls_path[0] = strdup ("/mp3/");
++	  pecfg.tree_top[0] = strdup ("Mp3s");
++	  pecfg.root_active[0] = TRUE;
++	  pecfg.expand_on_load[0] = TRUE;
++	}
++      if (pecfg.number_of_tree_roots > 1)
++	{
++	  pecfg.ls_path[1] = strdup ("/home/share/Playlists/");
++	  pecfg.tree_top[1] = strdup ("Playlists");
++	  pecfg.root_active[1] = FALSE;
++	  pecfg.expand_on_load[1] = TRUE;
++	}
++      for (i = 2; i < pecfg.number_of_tree_roots; i++)
++	{
++	  pecfg.ls_path[i] = strdup ("/");
++	  pecfg.tree_top[i] = strdup ("Local Root");
++	  pecfg.root_active[i] = FALSE;
++	  pecfg.expand_on_load[i] = FALSE;
++	}
++    }
++  g_free (filename);
++  pecfg.number_of_tree_roots_new = pecfg.number_of_tree_roots;
++}
++
++/* Save current settings to the xmms config file */
++void
++peapp_save_config (void)
++{
++  ConfigFile *cfgfile;
++  gchar *filename, *tmp;
++  gint i;
++
++  filename = g_strconcat (g_get_home_dir (), "/.xmms/config", NULL);
++  cfgfile = xmms_cfg_open_file (filename);
++  if (!cfgfile)
++    cfgfile = xmms_cfg_new ();
++
++  xmms_cfg_write_int (cfgfile, "aped", "number_of_tree_roots",
++		      pecfg.number_of_tree_roots_new);
++
++  for (i = 0; i < pecfg.number_of_tree_roots; i++)
++    {
++      tmp = g_strdup_printf ("ls_path_%i", i);
++      xmms_cfg_write_string (cfgfile, "aped", tmp, pecfg.ls_path[i]);
++      g_free (tmp);
++      tmp = g_strdup_printf ("tree_top_%i", i);
++      xmms_cfg_write_string (cfgfile, "aped", tmp, pecfg.tree_top[i]);
++      g_free (tmp);
++      tmp = g_strdup_printf ("root_active_%i", i);
++      xmms_cfg_write_boolean (cfgfile, "aped", tmp, pecfg.root_active[i]);
++      g_free (tmp);
++      tmp = g_strdup_printf ("expand_on_load_%i", i);
++      xmms_cfg_write_boolean (cfgfile, "aped", tmp, pecfg.expand_on_load[i]);
++      g_free (tmp);
++    }
++  if (pecfg.number_of_tree_roots_new > pecfg.number_of_tree_roots)
++    for (i = pecfg.number_of_tree_roots; i < pecfg.number_of_tree_roots_new;
++	 i++)
++      {
++	tmp = g_strdup_printf ("ls_path_%i", i);
++	xmms_cfg_write_string (cfgfile, "aped", tmp, "/");
++	g_free (tmp);
++	tmp = g_strdup_printf ("tree_top_%i", i);
++	xmms_cfg_write_string (cfgfile, "aped", tmp, "Local Root");
++	g_free (tmp);
++	tmp = g_strdup_printf ("root_active_%i", i);
++	xmms_cfg_write_boolean (cfgfile, "aped", tmp, FALSE);
++	g_free (tmp);
++	tmp = g_strdup_printf ("expand_on_load_%i", i);
++	xmms_cfg_write_boolean (cfgfile, "aped", tmp, FALSE);
++	g_free (tmp);
++      }
++
++  xmms_cfg_write_string (cfgfile, "aped", "playlistname", pecfg.playlistname);
++  xmms_cfg_write_boolean (cfgfile, "aped", "strip_extension",
++			  pecfg.strip_extension);
++  xmms_cfg_write_string (cfgfile, "aped", "regexp", pecfg.regexp);
++  xmms_cfg_write_boolean (cfgfile, "aped", "enable_regexp",
++			  pecfg.enable_regexp);
++  xmms_cfg_write_string (cfgfile, "aped", "indexname", pecfg.indexname);
++  xmms_cfg_write_string (cfgfile, "aped", "recordname", pecfg.recordname);
++  xmms_cfg_write_boolean (cfgfile, "aped", "replace_index",
++			  pecfg.replace_index);
++  xmms_cfg_write_boolean (cfgfile, "aped", "show_size", pecfg.show_size);
++  xmms_cfg_write_boolean (cfgfile, "aped", "show_date", pecfg.show_date);
++  xmms_cfg_write_boolean (cfgfile, "aped", "show_path", pecfg.show_path);
++  xmms_cfg_write_boolean (cfgfile, "aped", "rescan", pecfg.rescan);
++  xmms_cfg_write_boolean (cfgfile, "aped", "drag_order", pecfg.drag_order);
++  xmms_cfg_write_boolean (cfgfile, "aped", "show_random", pecfg.show_random);
++  xmms_cfg_write_boolean (cfgfile, "aped", "auto_random", pecfg.auto_random);
++  xmms_cfg_write_int (cfgfile, "aped", "random_root", pecfg.random_root);
++  xmms_cfg_write_boolean (cfgfile, "aped", "sort_playlist",
++			  pecfg.sort_playlist);
++  xmms_cfg_write_boolean (cfgfile, "aped", "auto_add_random",
++			  pecfg.auto_add_random);
++  xmms_cfg_write_int (cfgfile, "aped", "size_w", pecfg.size_w);
++  xmms_cfg_write_int (cfgfile, "aped", "size_h", pecfg.size_h);
++  xmms_cfg_write_boolean (cfgfile, "aped", "save_size", pecfg.save_size);
++  xmms_cfg_write_boolean (cfgfile, "aped", "config", TRUE);
++
++  xmms_cfg_write_file (cfgfile, filename);
++  xmms_cfg_free (cfgfile);
++  g_free (filename);
++
++}
++
++/*
++ * main thread
++ *
++ * thie is calles some many times a second, when plugin is enabled
++ * 
++ * if it detects an open Pe_browser (xmms-standard) 
++ * it ist destroyed and replaced by the APED 
++ * this may not be very nice - well - but i just could not get
++ * a signal Handler or something else in the main-programm
++ * since i am an plugin. If you know a cool solution to this mail me.
++ *
++ * yes and if the playlist end is reached. the random select function 
++ * could be called from here
++ */
++static gint
++timeout_func (gpointer data)
++{
++  gboolean playing, run_end_cmd = FALSE;
++  gint pos;
++
++  GDK_THREADS_ENTER ();
++  /*  if (filebrowser)
++    {
++      gtk_widget_destroy (filebrowser);
++      pe_show_filebrowser ();
++      }*/
++  if (pecfg.auto_random)
++    {
++      gint session = pe_gp.super.xmms_session;
++
++      playing = xmms_remote_is_playing (session);
++      pos = xmms_remote_get_playlist_pos (session);
++
++      if (playing)
++	{
++	  gint pe_length =
++	    xmms_remote_get_playlist_length (session);
++	  if (pos + 1 == pe_length)
++	    possible_pl_end = TRUE;
++	  else
++	    possible_pl_end = FALSE;
++	}
++      else if (possible_pl_end)
++	{
++	  if (pos == 0)
++	    run_end_cmd = TRUE;
++	  possible_pl_end = FALSE;
++	}
++      if (run_end_cmd)
++	{
++	  pe_random_selection (TRUE);
++	  xmms_remote_set_playlist_pos (session,
++					xmms_remote_get_playlist_length
++					(session) - 1);
++	  xmms_remote_play (session);
++	}
++    }
++  GDK_THREADS_LEAVE ();
++  return TRUE;
++}
++
++void pe_show_url_editor(PlaylistEditorPlugin *plugin, GtkWidget *w)
++{
++  playlistwin_show_add_url_window(&pe_gp);
++}
++
++void pe_show_dir_editor(PlaylistEditorPlugin *plugin, GtkWidget *w)
++{
++  playlistwin_show_dirbrowser(&pe_gp);
++}
++
++void pe_show_file_editor(PlaylistEditorPlugin *plugin, GtkWidget *w)
++{
++  pe_show_filebrowser();
++}
++
+diff -Naurd xmms-1.2.4/General/playlist_ed/pe.h xmms-1.2.4-ape/General/playlist_ed/pe.h
+--- xmms-1.2.4/General/playlist_ed/pe.h	Wed Dec 31 23:00:00 1969
++++ xmms-1.2.4-ape/General/playlist_ed/pe.h	Sat Apr 21 19:37:49 2001
+@@ -0,0 +1,97 @@
++/*  APED plugin for xmms by Robin Gareus (robin@gareus.de)
++ *  Advanced Playlist EDitor
++ *
++ *  X11amp is Copyright (C) 1998-1999  Peter Alm, Mikael Alm, Olle Hallnas, ThomNilsson and 4Front Technologies
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *
++ *
++ * Version 0.1 hacked 26-28. April 2000
++ *    main things that everyithing seems to work fine on my machine...
++ */
++
++#ifndef _PE_H_
++#define _PE_H_
++#include "config.h"
++
++/* System general includes */
++#include <stdio.h>
++#include <string.h>
++#include <ctype.h>
++#include <math.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <termios.h>
++#include <sys/time.h>
++#include <errno.h>
++#include <signal.h>
++#include <stddef.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <dirent.h>
++#include <regex.h>
++
++
++/* XMMS-required includes (glib, threads) */
++#include <glib.h>
++#include <gtk/gtk.h>
++#include <pthread.h>
++#include "xmms/plugin.h"
++#include "../../libxmms/xmmsctrl.h"
++#include "../../libxmms/configfile.h"
++#include "../../xmms/xmms.h"
++
++#define MAXIMUMROOTS 16
++#define TIMESTRINGSIZE 16
++#define TIMESTRING "%d %b %y"
++
++typedef struct
++{
++  gint number_of_tree_roots;
++  gint number_of_tree_roots_new;
++  gchar **ls_path, **tree_top;
++  gboolean *root_active, *expand_on_load;
++  gchar *transl_from, *transl_to;
++  gboolean strip_extension, enable_regexp, replace_index;
++  gchar *playlistname, *regexp, *indexname, *recordname;
++  gboolean show_size, show_path, show_date, auto_random, show_random;
++  gint random_root, size_h, size_w;
++  gboolean sort_playlist, auto_add_random, save_size, rescan, drag_order;
++}
++peConfig;
++
++typedef struct
++{
++  gboolean scanned;
++  gchar *path;
++}
++DirNode;
++
++struct DirData
++{
++  gchar *directory;
++  GtkTree *tree;
++};
++
++extern peConfig pecfg;
++
++
++void pe_about (void);
++void pe_configure (void);
++void peapp_read_config (void);
++void peapp_save_config (void);
++GtkWidget *pe_show_filebrowser ();
++void pe_random_selection (gboolean auto_add);
++
++extern PlaylistEditorPlugin pe_gp;
++#endif /* _PE_H_ */
++
+diff -Naurd xmms-1.2.4/configure.in xmms-1.2.4-ape/configure.in
+--- xmms-1.2.4/configure.in	Mon Nov 27 23:40:19 2000
++++ xmms-1.2.4-ape/configure.in	Tue Apr 17 23:43:18 2001
+@@ -393,6 +393,8 @@
+ General/ir/Makefile
+ General/joystick/Makefile
+ General/song_change/Makefile
++General/playlist_ed/Makefile
++General/default_playlist_editor/Makefile
+ Visualization/Makefile
+ Visualization/blur_scope/Makefile
+ Visualization/sanalyzer/Makefile
+diff -Naurd xmms-1.2.4/xmms/main.c xmms-1.2.4-ape/xmms/main.c
+--- xmms-1.2.4/xmms/main.c	Mon Nov 20 14:45:10 2000
++++ xmms-1.2.4-ape/xmms/main.c	Wed Apr 18 00:25:50 2001
+@@ -16,6 +16,7 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ #include "xmms.h"
++#include <unistd.h>
+ 
+ #include <gdk/gdkx.h>
+ #include <gdk/gdk.h>
+@@ -361,6 +362,16 @@
+ 	cfg.disabled_iplugins = NULL;
+ 	cfg.enabled_gplugins = NULL;
+ 	cfg.mouse_change = 8;
++	cfg.ignore_dcross = FALSE;
++	cfg.enable_p_regexp = FALSE;
++	cfg.p_regstr = g_strdup("");
++	cfg.p_substr = g_strdup("");
++	cfg.enable_r_regexp = FALSE;
++	cfg.r_regstr = g_strdup("");
++	cfg.r_substr = g_strdup("");
++	cfg.enable_d_regexp = FALSE;
++	cfg.d_regstr = g_strdup("");
++	cfg.d_substr = g_strdup("");
+ 	 
+ 
+ 	filename = g_strconcat(g_get_home_dir(), "/.xmms/config", NULL);
+@@ -434,6 +445,7 @@
+ 		xmms_cfg_read_string(cfgfile, "xmms", "eqpreset_extension", &cfg.eqpreset_extension);
+ 		xmms_cfg_read_string(cfgfile, "xmms", "skin", &cfg.skin);
+ 		xmms_cfg_read_string(cfgfile, "xmms", "output_plugin", &cfg.outputplugin);
++		xmms_cfg_read_string(cfgfile, "xmms", "playlist_editor_plugin", &cfg.playlist_editor_plugin);
+ 		xmms_cfg_read_string(cfgfile, "xmms", "effect_plugin", &cfg.effectplugin);
+ 		xmms_cfg_read_string(cfgfile, "xmms", "enabled_gplugins", &cfg.enabled_gplugins);
+ 		xmms_cfg_read_string(cfgfile, "xmms", "enabled_vplugins", &cfg.enabled_vplugins);
+@@ -447,6 +459,16 @@
+ 		xmms_cfg_read_boolean(cfgfile, "xmms", "pause_between_songs", &cfg.pause_between_songs);
+ 		xmms_cfg_read_int(cfgfile, "xmms", "pause_between_songs_time", &cfg.pause_between_songs_time);
+ 		xmms_cfg_read_int(cfgfile, "xmms", "mouse_wheel_change", &cfg.mouse_change);
++		xmms_cfg_read_boolean(cfgfile, "xmms", "enable_p_regexp", &cfg.enable_p_regexp);
++		xmms_cfg_read_boolean(cfgfile, "xmms", "ignore_dcross", &cfg.ignore_dcross);
++		xmms_cfg_read_string(cfgfile, "xmms", "p_regstr", &cfg.p_regstr);
++		xmms_cfg_read_string(cfgfile, "xmms", "p_substr", &cfg.p_substr);
++		xmms_cfg_read_boolean(cfgfile, "xmms", "enable_r_regexp", &cfg.enable_r_regexp);
++		xmms_cfg_read_string(cfgfile, "xmms", "r_regstr", &cfg.r_regstr);
++		xmms_cfg_read_string(cfgfile, "xmms", "r_substr", &cfg.r_substr);
++		xmms_cfg_read_boolean(cfgfile, "xmms", "enable_d_regexp", &cfg.enable_d_regexp);
++		xmms_cfg_read_string(cfgfile, "xmms", "d_regstr", &cfg.d_regstr);
++		xmms_cfg_read_string(cfgfile, "xmms", "d_substr", &cfg.d_substr);
+ 		if (xmms_cfg_read_int(cfgfile, "xmms", "url_history_length", &length))
+ 		{
+ 			for(i = 1; i <= length; i++)
+@@ -585,6 +607,16 @@
+ 	xmms_cfg_write_boolean(cfgfile, "xmms", "pause_between_songs", cfg.pause_between_songs);
+ 	xmms_cfg_write_int(cfgfile, "xmms", "pause_between_songs_time", cfg.pause_between_songs_time);
+ 	xmms_cfg_write_int(cfgfile, "xmms", "mouse_wheel_change", cfg.mouse_change);
++	xmms_cfg_write_boolean(cfgfile, "xmms", "enable_p_regexp", cfg.enable_p_regexp);
++	xmms_cfg_write_boolean(cfgfile, "xmms", "ignore_dcross", cfg.ignore_dcross);
++	xmms_cfg_write_string(cfgfile, "xmms", "p_regstr", cfg.p_regstr);
++	xmms_cfg_write_string(cfgfile, "xmms", "p_substr", cfg.p_substr);
++	xmms_cfg_write_boolean(cfgfile, "xmms", "enable_r_regexp", cfg.enable_r_regexp);
++	xmms_cfg_write_string(cfgfile, "xmms", "r_regstr", cfg.r_regstr);
++	xmms_cfg_write_string(cfgfile, "xmms", "r_substr", cfg.r_substr);
++	xmms_cfg_write_boolean(cfgfile, "xmms", "enable_d_regexp", cfg.enable_d_regexp);
++	xmms_cfg_write_string(cfgfile, "xmms", "d_regstr", cfg.d_regstr);
++	xmms_cfg_write_string(cfgfile, "xmms", "d_substr", cfg.d_substr);
+  	xmms_cfg_write_string(cfgfile, "xmms", "eqpreset_default_file", cfg.eqpreset_default_file);
+  	xmms_cfg_write_string(cfgfile, "xmms", "eqpreset_extension", cfg.eqpreset_extension);
+ 	for (i = 0; i < 10; i++)
+@@ -601,6 +633,12 @@
+ 		xmms_cfg_write_string(cfgfile, "xmms", "output_plugin", get_current_output_plugin()->filename);
+ 	else
+ 		xmms_cfg_remove_key(cfgfile, "xmms", "output_plugin");
++
++	if (get_current_playlist_editor_plugin())
++		xmms_cfg_write_string(cfgfile, "xmms", "playlist_editor_plugin", get_current_playlist_editor_plugin()->super.filename);
++	else
++		xmms_cfg_remove_key(cfgfile, "xmms", "playlist_editor_plugin");
++
+ 	if (get_current_effect_plugin())
+ 		xmms_cfg_write_string(cfgfile, "xmms", "effect_plugin", get_current_effect_plugin()->filename);
+ 	else
+@@ -3237,6 +3275,8 @@
+ 
+ #endif
+ 
++	/*	sleep(3);*/
++
+ #ifdef ENABLE_NLS
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+ 	textdomain(PACKAGE);
+@@ -3294,11 +3334,11 @@
+ 		setreuid(getuid(), getuid());
+ 	}
+ 	make_xmms_dir();
+-	if (!setup_ctrlsocket())
++	/*if (!setup_ctrlsocket())
+ 	{
+ 		parse_cmd_line(argc, argv, TRUE);
+ 		exit(0);
+-	}
++		}*/
+ 	gdk_rgb_init();
+ 	gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
+ 	gtk_widget_set_default_visual(gdk_rgb_get_visual());
+diff -Naurd xmms-1.2.4/xmms/main.h xmms-1.2.4-ape/xmms/main.h
+--- xmms-1.2.4/xmms/main.h	Fri Oct 20 12:40:32 2000
++++ xmms-1.2.4-ape/xmms/main.h	Tue Apr 17 21:59:32 2001
+@@ -46,12 +46,19 @@
+ 	gboolean use_backslash_as_dir_delimiter, enable_dga;
+ 	gboolean random_skin_on_play, use_fontsets;
+ 	gboolean mainwin_use_xfont;
++	gboolean ignore_dcross;
++	gboolean enable_p_regexp;
++	gboolean enable_r_regexp;
++	gboolean enable_d_regexp;
+ 	gfloat equalizer_preamp, equalizer_bands[10];
+-	gchar *skin, *outputplugin, *filesel_path, *playlist_path;
++	gchar *skin, *outputplugin, *filesel_path, *playlist_path, *playlist_editor_plugin;
+ 	gchar *playlist_font, *mainwin_font;
+ 	gchar *effectplugin;
+ 	gchar *disabled_iplugins, *enabled_gplugins, *enabled_vplugins;
+ 	gchar *eqpreset_default_file, *eqpreset_extension;
++	gchar *p_regstr, *p_substr;
++	gchar *r_regstr, *r_substr;
++	gchar *d_regstr, *d_substr;
+ 	GList *url_history;
+ 	gint timer_mode, vis_type, analyzer_mode, analyzer_type, scope_mode,
+ 	     vu_mode, vis_refresh;
+diff -Naurd xmms-1.2.4/xmms/playlist.c xmms-1.2.4-ape/xmms/playlist.c
+--- xmms-1.2.4/xmms/playlist.c	Thu Nov  9 10:12:08 2000
++++ xmms-1.2.4-ape/xmms/playlist.c	Mon Apr 16 16:37:46 2001
+@@ -20,6 +20,7 @@
+ #include "libxmms/util.h"
+ #include <sys/stat.h>
+ #include <unistd.h>
++#include <regex.h>
+ 
+ GList *playlist = NULL;
+ GList *shuffle_list = NULL;
+@@ -218,9 +219,27 @@
+ static void __playlist_ins(gchar * filename, glong pos)
+ {
+ 	PlaylistEntry *entry;
+-
++	gchar * temp;
++	regex_t *preg;
++        regmatch_t  pmatch[2];
+ 	entry = g_malloc0(sizeof (PlaylistEntry));
+-	entry->filename = g_strdup(filename);
++ 	pmatch[0].rm_so=0; pmatch[0].rm_eo=0;	
++
++	if (cfg.enable_p_regexp ) {
++	  preg = malloc (sizeof(regex_t));
++          regcomp(preg, cfg.p_regstr, REG_EXTENDED);
++	  regexec(preg,  filename,
++                  1,  pmatch, 0);
++           if (pmatch[0].rm_eo != 0){
++ 	    filename[ pmatch[0].rm_so ]='\0';
++
++	    entry->filename = g_strconcat(filename,cfg.p_substr,filename+pmatch[0].rm_eo,NULL);
++  	   } else
++ 	     entry->filename = g_strdup(filename);
++	   free(preg);
++	 } else 
++ 	   entry->filename = g_strdup(filename);
++       
+ 	entry->length = -1;
+ 
+ 	pthread_mutex_lock(&playlist_mutex);
+@@ -754,10 +773,19 @@
+ 	GList *node;
+ 	FILE *file;
+ 	gchar *ext;
++	gchar *temp,*tmp,*tmp2;
+ 	gboolean is_pls = FALSE;
++	regex_t *preg;
++	regmatch_t  pmatch[2];
++
+ 
+ 	if ((file = fopen(filename, "w")) != NULL)
+ 	{
++        	if (cfg.enable_r_regexp ) {
++	  	  preg = malloc (sizeof(regex_t));
++          	  regcomp(preg, cfg.r_regstr, REG_EXTENDED);
++        	}
++
+ 		ext = strrchr(filename, '.');
+ 		if (ext)
+ 		{
+@@ -775,12 +803,37 @@
+ 			entry = (PlaylistEntry *) node->data;
+ 			if (is_pls)
+ 				fprintf(file, "File%d=%s\n", g_list_position(playlist, node) + 1, entry->filename);
+-			else
+-				fprintf(file, "%s\n", entry->filename);
++			else {
++
++                          if (cfg.enable_r_regexp ) {
++	                    tmp = g_strdup(entry->filename);
++
++                            regexec(preg,  entry->filename,
++                                    1,  pmatch, 0);
++			    if (pmatch[0].rm_eo != 0){
++
++	                      tmp[ pmatch[0].rm_so ]='\0';
++                              tmp2 = g_strconcat(tmp,cfg.r_substr,tmp+pmatch[0].rm_eo,NULL);
++                              if(cfg.use_backslash_as_dir_delimiter)
++	                      {
++	                        while ((temp = strchr(tmp2, '/')) != NULL)
++		                *temp = '\\';
++	                      }
++	                      fprintf(file, "%s\n",tmp2);
++	                      g_free(tmp2);
++	                      g_free(tmp);
++ 	                    } else
++		 		fprintf(file, "%s\n", entry->filename);
++	                  } else 
++
++		          fprintf(file, "%s\n", entry->filename);
++                        }
+ 			node = node->next;
+ 		}
+ 		PL_UNLOCK();
+ 		fclose(file);
++                if (cfg.enable_r_regexp ) 
++			free(preg);
+ 		return TRUE;
+ 	}
+ 	return FALSE;
+@@ -803,7 +856,10 @@
+ 		      *temp = '/';
+ 	}
+ 
+-	if (filename[0] != '/' && !strstr(filename, "://"))
++        if (filename[0] == '#' && cfg.ignore_dcross)
++           return;
++
++	if (filename[0] != '/' && !strstr(filename, ":/"))
+ 	{
+ 		path = g_strdup(playlist_name);
+ 		temp = strrchr(path, '/');
+diff -Naurd xmms-1.2.4/xmms/playlistwin.c xmms-1.2.4-ape/xmms/playlistwin.c
+--- xmms-1.2.4/xmms/playlistwin.c	Mon Nov 20 14:45:10 2000
++++ xmms-1.2.4-ape/xmms/playlistwin.c	Sat Apr 21 19:29:05 2001
+@@ -18,9 +18,10 @@
+ #include "xmms.h"
+ #include "libxmms/dirbrowser.h"
+ 
++struct PlaylistEditorPluginData *pep_data=NULL;
+ GtkWidget *playlistwin, *playlistwin_save_filesel = NULL;
+-GtkWidget *playlistwin_load_filesel = NULL, *playlistwin_url_window = NULL,
+-         *playlistwin_dir_browser;
++GtkWidget *playlistwin_load_filesel = NULL /*, *playlistwin_url_window = NULL,
++					    *playlistwin_dir_browser, *filebrowser = NULL */;
+ GtkItemFactory *playlistwin_sort_menu, *playlistwin_sub_menu;
+ 
+ GdkPixmap *playlistwin_bg;
+@@ -512,19 +513,30 @@
+ 	while (XCheckMaskEvent(GDK_DISPLAY(), ButtonMotionMask, &ev)) ;
+ }
+ 
++/*
+ void playlistwin_show_filebrowser(void)
+ {
+-	static GtkWidget *filebrowser;
++//
++// APED Plugin has to access in order to replace this Widget
++// so i simply moved it to the top (global)
++//    static GtkWidget *filebrowser;
++//
++#if 1
++  PlaylistEditorPlugin *p = get_current_playlist_editor_plugin();
++  (*p->show_editor)(p);
++
++#else
+ 	if (filebrowser != NULL)
+ 		return;
+ 
++		// le truc a faire par defaut pour le file browser normal
+ 	filebrowser = util_create_filebrowser(FALSE);
+ 	gtk_signal_connect(GTK_OBJECT(filebrowser), "destroy",
+ 			   GTK_SIGNAL_FUNC(gtk_widget_destroyed), &filebrowser);
+-}
+-
+-
++#endif
++}*/
+ 
++/*
+ void playlistwin_url_ok_clicked(GtkWidget * w, GtkWidget * entry)
+ {
+ 	gchar *text, *temp;
+@@ -555,7 +567,8 @@
+ 	}
+ 
+ }
+-
++*/
++/*
+ void playlistwin_add_dir_handler(gchar * dir)
+ {
+ 	g_free(cfg.filesel_path);
+@@ -575,20 +588,25 @@
+ 	if (!GTK_WIDGET_VISIBLE(playlistwin_dir_browser))
+ 		gtk_widget_show(playlistwin_dir_browser);
+ 
+-}
++}*/
+ 
+ void playlistwin_add_popup_handler(gint item)
+ {
++  PlaylistEditorPlugin *p = get_current_playlist_editor_plugin();
++  
+ 	switch (item)
+ 	{
+ 		case ADD_URL:
+-			playlistwin_show_add_url_window();
++		  /*playlistwin_show_add_url_window();*/
++		  p->show_url_editor(p,p->url_editor);
+ 			break;
+ 		case ADD_DIR:
+-			playlistwin_show_dirbrowser();
++		  /*playlistwin_show_dirbrowser();*/
++		  p->show_dir_editor(p,p->dir_editor);
+ 			break;
+ 		case ADD_FILE:
+-			playlistwin_show_filebrowser();
++		  /*playlistwin_show_filebrowser();*/
++		  p->show_file_editor(p,p->file_editor);
+ 			break;
+ 	}
+ }
+@@ -1171,12 +1189,24 @@
+ 			refresh = FALSE;
+ 			break;
+ 		case GDK_Insert:
++#if 0
+ 			if(event->state & GDK_SHIFT_MASK)
+ 				playlistwin_show_dirbrowser();
+ 			else if(event->state & GDK_MOD1_MASK)
+ 				playlistwin_show_add_url_window();
+ 			else
+ 				playlistwin_show_filebrowser();
++#else
++			{
++			  PlaylistEditorPlugin *p = get_current_playlist_editor_plugin();
++			  if(event->state & GDK_SHIFT_MASK)
++			  (*p->show_dir_editor)(p,p->dir_editor);
++			  else if(event->state & GDK_MOD1_MASK)
++			    (*p->show_url_editor)(p,p->url_editor);
++			  else
++			    (*p->show_file_editor)(p,p->file_editor);
++			}
++#endif
+ 			refresh=FALSE;
+ 			break;
+ 		default:
+@@ -1529,3 +1559,99 @@
+ 	tbutton_set_toggled(mainwin_pl, FALSE);
+ 	GTK_CHECK_MENU_ITEM(gtk_item_factory_get_widget(mainwin_general_menu, _("/Playlist Editor")))->active = FALSE;
+ }
++
++PlaylistEditorPlugin *get_current_playlist_editor_plugin(void)
++{
++	return pep_data->current_editor_plugin;
++}
++
++void set_current_playlist_editor_plugin(int i)
++{
++  pep_data->current_editor_plugin = (PlaylistEditorPlugin *) g_list_nth(pep_data->editor_list, i)->data;
++}
++
++GList *get_playlist_editor_list(void)
++{
++  return pep_data->editor_list;
++}
++
++void enable_playlist_editor_plugin(int i, gboolean enable)
++{
++  if(enable==FALSE) return;
++  else
++    {
++      GList *node = pep_data->editor_list;
++      gint j = 0;
++      PlaylistEditorPlugin *gp;
++      
++      while(node) {
++	gp = (PlaylistEditorPlugin *) node->data;
++	if(j==i)
++	  {
++	    if (gp->super.init) /* if this is null, this will probably trigger a bug down the road */
++	      gp->super.init();
++	    pep_data->current_editor_plugin = gp;
++	  }
++	else
++	  {
++	    if (gp->super.cleanup)
++	      gp->super.cleanup();
++	  }
++	
++	node = node->next;
++	j++;
++      }
++    }
++}
++
++static void playlistwin_url_ok_clicked(GtkWidget * w, GtkWidget * entry)
++{
++	gchar *text, *temp;
++
++	text = gtk_entry_get_text(GTK_ENTRY(entry));
++	if (text && *text)
++	{
++		g_strstrip(text);
++		if(strstr(text, ":/") == NULL && text[0] != '/')
++			temp = g_strconcat("http://", text, NULL);
++		else
++			temp = g_strdup(text);
++		playlist_add_url_string(temp);
++		g_free(temp);
++		playlistwin_update_list();
++	}
++	gtk_widget_destroy(w);
++}
++
++void playlistwin_show_add_url_window(PlaylistEditorPlugin *plugin)
++{
++	if(!plugin->url_editor)
++	{
++		plugin->url_editor = util_create_add_url_window(_("Enter URL to add:"), GTK_SIGNAL_FUNC(playlistwin_url_ok_clicked), NULL);
++		gtk_window_set_transient_for(GTK_WINDOW(plugin->url_editor), GTK_WINDOW(playlistwin));
++		gtk_signal_connect(GTK_OBJECT(plugin->url_editor), "destroy", GTK_SIGNAL_FUNC(gtk_widget_destroyed), plugin->url_editor);
++		gtk_widget_show(plugin->url_editor);
++	}
++}
++
++static void playlistwin_add_dir_handler(gchar * dir)
++{
++	g_free(cfg.filesel_path);
++	cfg.filesel_path = g_strdup(dir);
++	playlist_add_dir(dir);
++	playlistwin_update_list();
++}
++
++void playlistwin_show_dirbrowser(PlaylistEditorPlugin *plugin)
++{
++	if (!plugin->dir_editor)
++	{
++		plugin->dir_editor = xmms_create_dir_browser(_("Select directory to add:"), cfg.filesel_path, GTK_SELECTION_EXTENDED, playlistwin_add_dir_handler);
++		gtk_signal_connect(GTK_OBJECT(plugin->dir_editor), "destroy", GTK_SIGNAL_FUNC(gtk_widget_destroyed), &plugin->dir_editor);
++		gtk_window_set_transient_for(GTK_WINDOW(plugin->dir_editor), GTK_WINDOW(playlistwin));
++	}
++	if (!GTK_WIDGET_VISIBLE(plugin->dir_editor))
++		gtk_widget_show(plugin->dir_editor);
++
++}
++
+diff -Naurd xmms-1.2.4/xmms/playlistwin.h xmms-1.2.4-ape/xmms/playlistwin.h
+--- xmms-1.2.4/xmms/playlistwin.h	Wed Feb 16 20:05:58 2000
++++ xmms-1.2.4-ape/xmms/playlistwin.h	Wed Apr 18 00:57:42 2001
+@@ -41,4 +41,18 @@
+ 
+ extern Vis *playlistwin_vis;
+ 
++struct PlaylistEditorPluginData
++{
++	GList *editor_list;
++	PlaylistEditorPlugin *current_editor_plugin;
++};
++PlaylistEditorPlugin *get_current_playlist_editor_plugin(void);
++GList *get_playlist_editor_list(void);
++void set_current_playlist_editor_plugin(int i);
++void enable_playlist_editor_plugin(int i, gboolean enable);
++
++void playlistwin_show_add_url_window(PlaylistEditorPlugin *plugin);
++void playlistwin_show_dirbrowser(PlaylistEditorPlugin *plugin);
++
+ #endif
++
+diff -Naurd xmms-1.2.4/xmms/plugin.h xmms-1.2.4-ape/xmms/plugin.h
+--- xmms-1.2.4/xmms/plugin.h	Wed Mar  1 19:28:06 2000
++++ xmms-1.2.4-ape/xmms/plugin.h	Wed Apr 18 00:18:58 2001
+@@ -25,6 +25,7 @@
+ #define PLUGIN_H
+ 
+ #include <glib.h>
++#include <gtk/gtkwidget.h>
+ 
+ typedef enum
+ {
+@@ -131,6 +132,19 @@
+ 	void (*cleanup) (void);	/* Called when the plugin is disabled or when xmms exits */
+ }
+ GeneralPlugin;
++
++typedef struct _PlaylistEditorPlugin PlaylistEditorPlugin;
++
++struct _PlaylistEditorPlugin
++{
++  GeneralPlugin super;
++  GtkWidget *url_editor;
++  GtkWidget *dir_editor;
++  GtkWidget *file_editor;
++  void (*show_url_editor)(PlaylistEditorPlugin *plugin, GtkWidget *w);
++  void (*show_dir_editor)(PlaylistEditorPlugin *plugin, GtkWidget *w);
++  void (*show_file_editor)(PlaylistEditorPlugin *plugin, GtkWidget *w);
++};
+ 
+ typedef struct _VisPlugin
+ {
+diff -Naurd xmms-1.2.4/xmms/pluginenum.c xmms-1.2.4-ape/xmms/pluginenum.c
+--- xmms-1.2.4/xmms/pluginenum.c	Mon Oct 16 12:37:56 2000
++++ xmms-1.2.4-ape/xmms/pluginenum.c	Tue Apr 17 23:25:01 2001
+@@ -45,6 +45,7 @@
+ extern struct EffectPluginData *ep_data;
+ extern struct GeneralPluginData *gp_data;
+ extern struct VisPluginData *vp_data;
++extern struct PlaylistEditorPluginData *pep_data;
+ 
+ void scan_plugins(char *dirname);
+ void add_plugin(gchar * filename);
+@@ -86,6 +87,7 @@
+ 	OutputPlugin *op;
+ 	InputPlugin *ip;
+ 	EffectPlugin *ep;
++	PlaylistEditorPlugin *pep;
+ 	gint dirsel = 0;
+ 
+ 	if (cfg.disabled_iplugins)
+@@ -107,6 +109,7 @@
+ 	ep_data = g_malloc0(sizeof (struct EffectPluginData));
+ 	gp_data = g_malloc0(sizeof (struct GeneralPluginData));
+ 	vp_data = g_malloc0(sizeof (struct VisPluginData));
++	pep_data = g_malloc0(sizeof (struct PlaylistEditorPluginData));
+ 
+ 
+ #ifndef DISABLE_USER_PLUGIN_DIR
+@@ -149,6 +152,22 @@
+ 		ep_data->current_effect_plugin = (EffectPlugin *) ep_data->effect_list->data;
+ 	gp_data->general_list = g_list_sort(gp_data->general_list, generallist_compare_func);
+ 	gp_data->enabled_list = NULL;
++
++	pep_data->editor_list = g_list_sort(pep_data->editor_list, generallist_compare_func);
++	pep_data->current_editor_plugin = NULL;
++	if (!pep_data->current_editor_plugin && g_list_length(pep_data->editor_list))
++	  pep_data->current_editor_plugin = (PlaylistEditorPlugin *) pep_data->editor_list->data;
++	node = pep_data->editor_list;
++	while(node)
++	  {
++		pep = (PlaylistEditorPlugin *) node->data;
++		if (!strcmp(cfg.playlist_editor_plugin, pep->super.filename))
++			pep_data->current_editor_plugin = pep;
++		if (pep->super.init)
++			pep->super.init();
++		node = node->next;
++	  }
++
+ 	vp_data->vis_list = g_list_sort(vp_data->vis_list, vislist_compare_func);
+ 	vp_data->enabled_list = NULL;
+ 	general_enable_from_stringified_list(cfg.enabled_gplugins);
+@@ -336,6 +355,20 @@
+ 			p->disable_plugin = vis_disable_plugin;
+ 			vp_data->vis_list = g_list_prepend(vp_data->vis_list, p);
+ 		}
++#ifdef HPUX
++		else if ((shl_findsym(&h, "get_peplugin_info", TYPE_PROCEDURE, (void *) &gpi)) == 0)
++#else
++		else if ((gpi = dlsym(h, "get_peplugin_info")) != NULL)
++#endif
++		{
++			PlaylistEditorPlugin *p;
++
++			p = (PlaylistEditorPlugin *) gpi();
++			p->super.handle = h;
++			p->super.filename = g_strdup(filename);
++			p->super.xmms_session = ctrlsocket_get_session_id();
++			pep_data->editor_list = g_list_prepend(pep_data->editor_list, p);
++		}
+ 		else
+ 		{
+ #ifdef HPUX
+@@ -519,4 +552,5 @@
+ 		g_list_free(vp_data->vis_list);
+ 	g_free(vp_data);
+ 
++	/* no loop to cleanup PlaylistEditorPlugin's yet */
+ }
+diff -Naurd xmms-1.2.4/xmms/prefswin.c xmms-1.2.4-ape/xmms/prefswin.c
+--- xmms-1.2.4/xmms/prefswin.c	Mon Nov 20 14:45:10 2000
++++ xmms-1.2.4-ape/xmms/prefswin.c	Wed Apr 18 00:58:55 2001
+@@ -56,6 +56,17 @@
+ GtkWidget *prefswin_options_pbs, *prefswin_options_pbs_box;
+ GtkWidget *prefswin_options_pbs_entry, *prefswin_options_pbs_label;
+ GtkWidget *prefswin_options_ubsd;
++GtkWidget *prefswin_options_ignore_dcross;
++GtkWidget *prefswin_options_p_regexp , *prefswin_options_p_box;
++GtkWidget *prefswin_options_p_substr , *prefswin_options_p_regstr;
++GtkWidget *prefswin_options_p_label;
++GtkWidget *prefswin_options_r_regexp , *prefswin_options_r_box;
++GtkWidget *prefswin_options_r_substr , *prefswin_options_r_regstr;
++GtkWidget *prefswin_options_r_label;
++GtkWidget *prefswin_options_d_regexp , *prefswin_options_d_box;
++GtkWidget *prefswin_options_d_substr , *prefswin_options_d_regstr;
++GtkWidget *prefswin_options_d_label;
++
+ GtkWidget *prefswin_options_edga;
+ GtkWidget *prefswin_options_font_frame, *prefswin_options_font_hbox;
+ GtkWidget *prefswin_options_font_vbox;
+@@ -183,6 +194,14 @@
+ 	{
+ 		gplist = get_general_list();
+ 		index = (gint) GTK_CLIST(prefswin_egplugins_glist)->selection->data;
++		{
++		  gint len = g_list_length(gplist);
++		  if(index>=len)
++		    {
++		      index -= len;
++		      gplist = get_playlist_editor_list();
++		    }
++		}
+ 		gp = g_list_nth(gplist, index)->data;
+ 
+ 		gtk_widget_set_sensitive(prefswin_egplugins_guse_cbox, 1);
+@@ -300,6 +319,12 @@
+ void prefswin_apply_changes(void)
+ {
+ 	g_free(cfg.playlist_font);
++	g_free(cfg.p_regstr);
++	g_free(cfg.p_substr);
++	g_free(cfg.r_regstr);
++	g_free(cfg.r_substr);
++	g_free(cfg.d_regstr);
++	g_free(cfg.d_substr);
+ 	g_free(cfg.mainwin_font);
+ 	cfg.allow_multiple_instances = GTK_TOGGLE_BUTTON(prefswin_options_ami)->active;
+ 	cfg.always_show_cb = GTK_TOGGLE_BUTTON(prefswin_options_asc)->active;
+@@ -324,6 +349,17 @@
+ 	cfg.use_fontsets = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(prefswin_options_fontset));
+ 	cfg.pause_between_songs_time = atoi(gtk_entry_get_text(GTK_ENTRY(prefswin_options_pbs_entry)));
+ 	cfg.use_backslash_as_dir_delimiter = GTK_TOGGLE_BUTTON(prefswin_options_ubsd)->active;
++	cfg.enable_p_regexp = GTK_TOGGLE_BUTTON(prefswin_options_p_regexp)->active;
++	cfg.ignore_dcross = GTK_TOGGLE_BUTTON(prefswin_options_ignore_dcross)->active;
++	cfg.p_regstr = g_strdup(gtk_entry_get_text(GTK_ENTRY(prefswin_options_p_regstr)));
++	cfg.p_substr = g_strdup(gtk_entry_get_text(GTK_ENTRY(prefswin_options_p_substr)));
++	cfg.enable_r_regexp = GTK_TOGGLE_BUTTON(prefswin_options_r_regexp)->active;
++	cfg.r_regstr = g_strdup(gtk_entry_get_text(GTK_ENTRY(prefswin_options_r_regstr)));
++	cfg.r_substr = g_strdup(gtk_entry_get_text(GTK_ENTRY(prefswin_options_r_substr)));
++	cfg.enable_d_regexp = GTK_TOGGLE_BUTTON(prefswin_options_d_regexp)->active;
++	cfg.d_regstr = g_strdup(gtk_entry_get_text(GTK_ENTRY(prefswin_options_d_regstr)));
++	cfg.d_substr = g_strdup(gtk_entry_get_text(GTK_ENTRY(prefswin_options_d_substr)));
++	
+ 	cfg.enable_dga = GTK_TOGGLE_BUTTON(prefswin_options_edga)->active;
+ 	cfg.mainwin_use_xfont = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(prefswin_mainwin_xfont));
+ 	cfg.use_eplugins = GTK_TOGGLE_BUTTON(prefswin_egplugins_euse_cbox)->active;
+@@ -453,7 +489,17 @@
+ 
+ 	sel = (gint) GTK_CLIST(prefswin_egplugins_glist)->selection->data;
+ 
+-	enable_general_plugin(sel, GTK_TOGGLE_BUTTON(w)->active);
++	{
++	  gint len = g_list_length(get_general_list());
++	  if(sel<len)
++	    enable_general_plugin(sel, GTK_TOGGLE_BUTTON(w)->active);
++	  else
++	    {
++	      sel -= len;
++	      enable_playlist_editor_plugin(sel,GTK_TOGGLE_BUTTON(w)->active);
++	    }
++	}
++
+ 	adj = gtk_clist_get_vadjustment(GTK_CLIST(prefswin_egplugins_glist));
+ 	pos = adj->value;
+ 	add_general_plugins();
+@@ -767,7 +813,7 @@
+ 	prefswin_options_frame = gtk_frame_new(_("Options"));
+ 	gtk_box_pack_start(GTK_BOX(prefswin_options_vbox), prefswin_options_frame, FALSE, FALSE, 0);
+ 	gtk_container_border_width(GTK_CONTAINER(prefswin_options_frame), 5);
+-	prefswin_options_table = gtk_table_new(2, 10, FALSE);
++	prefswin_options_table = gtk_table_new(2, 13, FALSE);
+ 	gtk_container_add(GTK_CONTAINER(prefswin_options_frame), prefswin_options_table);
+ 	gtk_container_border_width(GTK_CONTAINER(prefswin_options_table), 5);
+ 
+@@ -839,6 +885,56 @@
+ 
+ 	prefswin_options_ubsd = gtk_check_button_new_with_label(_("Use \'\\\' as a directory delimiter"));
+ 	gtk_table_attach_defaults(GTK_TABLE(prefswin_options_table), prefswin_options_ubsd, 0, 1, 8, 9);
++	prefswin_options_ignore_dcross = gtk_check_button_new_with_label("Ignore Playlist entrys with leading #");
++	gtk_table_attach_defaults(GTK_TABLE(prefswin_options_table), prefswin_options_ignore_dcross, 1, 2, 9, 10);
++
++	prefswin_options_p_box = gtk_hbox_new(FALSE, 5);
++	prefswin_options_p_regexp = gtk_check_button_new_with_label("Playlist Load - Filename regexp. substitute :");
++	gtk_table_attach_defaults(GTK_TABLE(prefswin_options_table), prefswin_options_p_regexp, 0, 1, 10, 11);
++	prefswin_options_p_regstr = gtk_entry_new_with_max_length(25);
++	gtk_widget_set_usize(prefswin_options_p_regstr, 100, -1);
++	gtk_box_pack_start(GTK_BOX(prefswin_options_p_box), prefswin_options_p_regstr, FALSE, FALSE, 0);
++	prefswin_options_p_label = gtk_label_new("by");
++	gtk_box_pack_start(GTK_BOX(prefswin_options_p_box), prefswin_options_p_label, FALSE, FALSE, 0);
++
++	prefswin_options_p_substr = gtk_entry_new_with_max_length(25);
++	gtk_widget_set_usize(prefswin_options_p_substr, 100, -1);
++	gtk_box_pack_start(GTK_BOX(prefswin_options_p_box), prefswin_options_p_substr, FALSE, FALSE, 0);
++
++	gtk_table_attach_defaults(GTK_TABLE(prefswin_options_table), prefswin_options_p_box, 1, 2, 10, 11);
++
++	prefswin_options_r_box = gtk_hbox_new(FALSE, 5);
++	prefswin_options_r_regexp = gtk_check_button_new_with_label("Playlist Save - Filename regexp. substitute :");
++	gtk_table_attach_defaults(GTK_TABLE(prefswin_options_table), prefswin_options_r_regexp, 0, 1, 11, 12);
++	prefswin_options_r_regstr = gtk_entry_new_with_max_length(25);
++	gtk_widget_set_usize(prefswin_options_r_regstr, 100, -1);
++	gtk_box_pack_start(GTK_BOX(prefswin_options_r_box), prefswin_options_r_regstr, FALSE, FALSE, 0);
++	prefswin_options_r_label = gtk_label_new("by");
++	gtk_box_pack_start(GTK_BOX(prefswin_options_r_box), prefswin_options_r_label, FALSE, FALSE, 0);
++
++	prefswin_options_r_substr = gtk_entry_new_with_max_length(25);
++	gtk_widget_set_usize(prefswin_options_r_substr, 100, -1);
++	gtk_box_pack_start(GTK_BOX(prefswin_options_r_box), prefswin_options_r_substr, FALSE, FALSE, 0);
++
++	gtk_table_attach_defaults(GTK_TABLE(prefswin_options_table), prefswin_options_r_box, 1, 2, 11, 12);
++
++
++	prefswin_options_d_box = gtk_hbox_new(FALSE, 5);
++	prefswin_options_d_regexp = gtk_check_button_new_with_label("Playlist Dirchange regexp. substitute :");
++	gtk_table_attach_defaults(GTK_TABLE(prefswin_options_table), prefswin_options_d_regexp, 0, 1, 12, 13);
++	prefswin_options_d_regstr = gtk_entry_new_with_max_length(25);
++	gtk_widget_set_usize(prefswin_options_d_regstr, 100, -1);
++	gtk_box_pack_start(GTK_BOX(prefswin_options_d_box), prefswin_options_d_regstr, FALSE, FALSE, 0);
++	prefswin_options_d_label = gtk_label_new("by");
++	gtk_box_pack_start(GTK_BOX(prefswin_options_d_box), prefswin_options_d_label, FALSE, FALSE, 0);
++
++	prefswin_options_d_substr = gtk_entry_new_with_max_length(25);
++	gtk_widget_set_usize(prefswin_options_d_substr, 100, -1);
++	gtk_box_pack_start(GTK_BOX(prefswin_options_d_box), prefswin_options_d_substr, FALSE, FALSE, 0);
++
++	gtk_table_attach_defaults(GTK_TABLE(prefswin_options_table), prefswin_options_d_box, 1, 2, 12, 13);
++
++
+ 
+ 	prefswin_options_mouse_box=gtk_hbox_new(FALSE, 5);
+ 	prefswin_options_mouse_label=gtk_label_new(_("Mouse Wheel adjusts Volume by (%)"));
+@@ -1079,15 +1175,12 @@
+ 
+ }
+ 
+-void add_general_plugins(void)
++static void add_general_plugins_from_list(GList *glist)
+ {
+-	GList *glist = get_general_list();
+ 	gchar *description, *temp;
+ 	GeneralPlugin *gp;
+ 	gint i = 0;
+ 
+-	gtk_clist_clear(GTK_CLIST(prefswin_egplugins_glist));
+-
+ 	while (glist)
+ 	{
+ 		gp = (GeneralPlugin *) glist->data;
+@@ -1109,6 +1202,13 @@
+ 	gtk_widget_set_sensitive(prefswin_egplugins_gabout, 0);
+ }
+ 
++void add_general_plugins(void)
++{
++  gtk_clist_clear(GTK_CLIST(prefswin_egplugins_glist));
++  add_general_plugins_from_list(get_general_list());
++  add_general_plugins_from_list(get_playlist_editor_list());
++}
++
+ void add_vis_plugins(void)
+ {
+ 	GList *glist = get_vis_list();
+@@ -1206,6 +1306,17 @@
+ 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefswin_options_rt), cfg.use_realtime);
+ 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefswin_options_pbs), cfg.pause_between_songs);
+ 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefswin_options_ubsd), cfg.use_backslash_as_dir_delimiter);
++	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefswin_options_ignore_dcross), cfg.ignore_dcross);
++	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefswin_options_p_regexp), cfg.enable_p_regexp);
++	gtk_entry_set_text(GTK_ENTRY(prefswin_options_p_regstr), cfg.p_regstr);
++	gtk_entry_set_text(GTK_ENTRY(prefswin_options_p_substr), cfg.p_substr);
++	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefswin_options_r_regexp), cfg.enable_r_regexp);
++	gtk_entry_set_text(GTK_ENTRY(prefswin_options_r_regstr), cfg.r_regstr);
++	gtk_entry_set_text(GTK_ENTRY(prefswin_options_r_substr), cfg.r_substr);
++	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefswin_options_d_regexp), cfg.enable_d_regexp);
++	gtk_entry_set_text(GTK_ENTRY(prefswin_options_d_regstr), cfg.d_regstr);
++	gtk_entry_set_text(GTK_ENTRY(prefswin_options_d_substr), cfg.d_substr);
++
+ 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefswin_options_edga), cfg.enable_dga);
+ 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefswin_options_fontset), cfg.use_fontsets);
+ 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefswin_mainwin_xfont), cfg.mainwin_use_xfont);
+diff -Naurd xmms-1.2.4/xmms/util.c xmms-1.2.4-ape/xmms/util.c
+--- xmms-1.2.4/xmms/util.c	Mon Nov 20 14:45:10 2000
++++ xmms-1.2.4-ape/xmms/util.c	Mon Apr 16 16:37:46 2001
+@@ -20,7 +20,10 @@
+ #include <X11/Xlib.h>
+ #include <sys/ipc.h>
+ #include <ctype.h>
++#include <unistd.h>
++#include <regex.h>
+ 
++gboolean already_in_set_dir_signal_processing = FALSE;
+ 
+ /*
+  * find_file_recursively() by Jörg Schuler Wed, 17 Feb 1999 23:50:52
+@@ -523,13 +526,30 @@
+ 
+ static void filebrowser_changed(GtkWidget * w, GtkFileSelection * filesel)
+ {
+-	gchar *current = "./", *parent = "../";
++	gchar *current = "./", *parent = "../", *dirname;
+ 	gchar *text = gtk_entry_get_text(GTK_ENTRY(w));
+ 	GList *list, *node;
++	regex_t *preg;
++	regmatch_t  pmatch[2];
++	pmatch[0].rm_so=0; pmatch[0].rm_eo=0;
+ 
+-	if ((!text || !(*text)) &&
+-	    (list = input_scan_dir(gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel)))) != NULL)
+-	{
++	if ((!text || !(*text)) && !already_in_set_dir_signal_processing)
++        {
++		if (cfg.enable_d_regexp ) {
++			dirname = g_strdup(gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel)));
++			preg = malloc (sizeof(regex_t));
++			regcomp(preg, cfg.d_regstr, REG_EXTENDED);
++			regexec(preg,  dirname, 1,  pmatch, 0);
++			if (pmatch[0].rm_eo != 0){
++				dirname[ pmatch[0].rm_so ]='\0';
++				already_in_set_dir_signal_processing=TRUE;
++				gtk_file_selection_set_filename(filesel, g_strconcat(dirname,cfg.d_substr,dirname+pmatch[0].rm_eo,NULL));
++				already_in_set_dir_signal_processing=FALSE;
++			}
++		}
++
++		if ((list = input_scan_dir(gtk_file_selection_get_filename(GTK_FILE_SELECTION(filesel)))) != NULL)
++		{
+ 		/*
+ 		 * We enter a directory that has been "hijacked" by a
+ 		 * input-plugin. This is used by the CDDA plugin
+@@ -549,7 +569,8 @@
+ 		}
+ 		gtk_clist_thaw(GTK_CLIST(filesel->file_list));
+ 		g_list_free(list);
+-	}
++	        }
++        }
+ }
+ 
+ gboolean util_filebrowser_is_dir(GtkFileSelection * filesel)

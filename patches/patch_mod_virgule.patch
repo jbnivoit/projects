@@ -1,0 +1,22 @@
+--- /mnt/mnt/POUBELLE/GNOME-CVS/mod_virgule/mod_virgule.c	Fri Sep 15 00:24:55 2000
++++ /mnt/mnt/POUBELLE/APACHE/SOURCE/apache_1.3.12/src/modules/mod_virgule/mod_virgule.c	Wed Sep 27 23:16:39 2000
+@@ -299,10 +299,17 @@
+       r->handler = "virgule";
+       r->filename = ap_pstrdup (r->pool, cfg->db);
+ 
+-#if 0
++#if 0 /* jbn: this causes a segfault systematically on my system */
+       /* strip <Location> prefix from url */
+       if (cfg->dir && !strncmp (r->uri, cfg->dir, strlen (cfg->dir)))
+-	r->uri = ap_pstrdup (r->pool, r->uri + strlen (cfg->dir));
++        r->uri = ap_pstrdup (r->pool, r->uri + strlen (cfg->dir));
++#else
++      /* do it like mod_rewrite does */
++      if (r->filename == NULL)
++	{
++	  int len = cfg->dir==NULL?0:strlen(cfg->dir);
++	  r->filename = ap_pstrdup(r->pool, r->uri + len);
++	}
+ #endif
+ 
+       return OK;

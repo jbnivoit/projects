@@ -1,0 +1,159 @@
+Thomas, Spencer,
+
+Here are patches for gd.c, gdCmd.c, and README-tcl, to add 
+support for filled arcs (circles, ellipses).
+
+John Ellson
+AT&T Bell Labs
+
+-----------------------------------
+
+
+*** gd.c.orig	Sun Apr  9 16:25:20 1995
+--- gd.c	Sun Apr  9 18:29:22 1995
+***************
+*** 578,586 ****
+  	int color;
+  {
+  	int i;
+- 	int smod, emod;
+  	int lx, ly;
+  	int w2, h2;
+  	w2 = w/2;
+  	h2 = h/2;
+  	while (e < s) {
+--- 578,586 ----
+  	int color;
+  {
+  	int i;
+  	int lx, ly;
+  	int w2, h2;
++ 
+  	w2 = w/2;
+  	h2 = h/2;
+  	while (e < s) {
+***************
+*** 598,603 ****
+--- 598,633 ----
+  	}
+  }
+  
++ void gdImageFilledArc(im, cx, cy, w, h, s, e, color)
++ 	gdImagePtr im;
++ 	int cx;
++ 	int cy;
++ 	int w;
++ 	int h;
++ 	int s;
++ 	int e;
++ 	int color;
++ {
++ 	int i;
++ 	gdPoint points[3];
++ 	int w2, h2;
++ 
++ 	w2 = w/2;
++ 	h2 = h/2;
++ 	while (e < s) {
++ 		e += 360;
++ 	}
++ 	points[0].x = cx; points[0].y = cy;
++ 	for (i=s; (i <= e); i++) {
++ 	    points[1].x = ((long)cost[i % 360] * (long)w2 / costScale) + cx; 
++ 	    points[1].y = ((long)sint[i % 360] * (long)h2 / sintScale) + cy;
++ 	    if (i != s) {
++ 		gdImageFilledPolygon(im, points, 3, color);	
++ 	    }
++ 	    points[2].x = points[1].x; points[2].y = points[1].y;
++ 	}
++ }
++ 
+  
+  #if 0
+  	/* Bresenham octant code, which I should use eventually */
+
+
+*** gdCmd.c.orig	Sun Apr  9 19:59:46 1995
+--- gdCmd.c	Sun Apr  9 20:04:14 1995
+***************
+*** 100,105 ****
+--- 100,107 ----
+      	"gdhandle color x1 y1 x2 y2"},
+      {"arc",		tclGdArcCmd,		8, 8, 	0, 1,
+      	"gdhandle color cx cy width height start end"},
++     {"fillarc",		tclGdArcCmd,		8, 8, 	0, 1,
++     	"gdhandle color cx cy width height start end"},
+      {"polygon",		tclGdPolygonCmd,	2, 999, 0, 1,
+      	"gdhandle color x1 y1 x2 y2 x3 y3 ..."},
+      {"fillpolygon",	tclGdPolygonCmd,	3, 999, 0, 1,
+***************
+*** 257,265 ****
+   * 	Draw the outline of (resp. fill) a rectangle in color <index>
+   * 	with corners at (x1,y1) and (x2,y2).
+   * gd arc <gdhandle> <index> <cx> <cy> <width> <height> <start> <end>
+!  * 	Draw an arc in color <index>, centered at (cx,cy) in a rectangle
+!  * 	width x height, starting at start degrees and ending at end degrees.
+!  *	start must be > end.
+   * gd polygon <gdhandle> <index> <x1> <y1> ...
+   * gd fillpolygon <gdhandle> <index> <x1> <y1> ...
+   * 	Draw the outline of, or fill, a polygon specified by the x, y
+--- 259,268 ----
+   * 	Draw the outline of (resp. fill) a rectangle in color <index>
+   * 	with corners at (x1,y1) and (x2,y2).
+   * gd arc <gdhandle> <index> <cx> <cy> <width> <height> <start> <end>
+!  * gd fillarc <gdhandle> <index> <cx> <cy> <width> <height> <start> <end>
+!  * 	Draw an arc, or filled segment, in color <index>, centered at (cx,cy)
+!  *      in a rectangle width x height, starting at start degrees and ending 
+!  *      at end degrees.	Start must be > end.
+   * gd polygon <gdhandle> <index> <x1> <y1> ...
+   * gd fillpolygon <gdhandle> <index> <x1> <y1> ...
+   * 	Draw the outline of, or fill, a polygon specified by the x, y
+***************
+*** 805,812 ****
+      if ( Tcl_GetInt( interp, argv[9], &end ) != TCL_OK )
+  	return TCL_ERROR;
+  
+!     /* Call the arc function. */
+!     gdImageArc( im, cx, cy, width, height, start, end, color );
+  
+      return TCL_OK;
+  }
+--- 808,818 ----
+      if ( Tcl_GetInt( interp, argv[9], &end ) != TCL_OK )
+  	return TCL_ERROR;
+  
+!     /* Call the appropriate arc function. */
+!     if ( argv[1][0] == 'a' ) 
+!         gdImageArc( im, cx, cy, width, height, start, end, color );
++     else
++         gdImageFilledArc( im, cx, cy, width, height, start, end, color );
+  
+      return TCL_OK;
+  }
+
+
+*** README-tcl.orig	Sun Apr  9 20:02:05 1995
+--- README-tcl	Sun Apr  9 18:24:18 1995
+***************
+*** 260,268 ****
+            with corners at (x1,y1) and (x2,y2).
+            
+     gd arc <gdhandle> <index> <cx> <cy> <width> <height> <start> <end>
+!           Draw an arc in index, centered at (cx,cy) in a rectangle width
+!           x height, starting at start degrees and ending at end degrees.
+!           start must be > end.
+            
+     gd polygon <gdhandle> <index> <x1> <y1> ...
+            
+--- 260,270 ----
+            with corners at (x1,y1) and (x2,y2).
+            
+     gd arc <gdhandle> <index> <cx> <cy> <width> <height> <start> <end>
+! 
+!    gd fillarc <gdhandle> <index> <cx> <cy> <width> <height> <start> <end>
+!         Draw an arc, or filled segment, in index, centered at (cx,cy)
+! 	  in a rectangle width x height, starting at start degrees and
+! 	  ending at end degrees.  Start must be > end.
+            
+     gd polygon <gdhandle> <index> <x1> <y1> ...
+            

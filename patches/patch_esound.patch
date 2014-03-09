@@ -1,0 +1,20 @@
+--- audio_alsa.c	Sat Sep 23 15:40:09 2000
++++ ../../GNOME/esound-0.2.19/audio_alsa.c	Sat Sep 23 15:31:53 2000
+@@ -70,7 +70,7 @@
+ #ifdef ALSA_5_API
+     static int frag_count = 0;
+ #else
+-    static int frag-count = 2;
++    static int frag_count = 2;
+ #endif
+ 
+ #ifdef ALSA_5_API
+@@ -315,7 +315,7 @@
+     return ( esd_audio_fd = snd_pcm_file_descriptor( alsa_sound_handle,
+ 						     alsa_channel ) );
+ #else
+-    return ( esd_audio_fd = snd_pcm_file_descriptor(alsa_sound_handle);
++    return ( esd_audio_fd = snd_pcm_file_descriptor(alsa_sound_handle));
+ #endif
+ 
+ }

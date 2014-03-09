@@ -1,0 +1,235 @@
+diff -u -r -P -x "*dia*" -x configure -x "*.status" -x "*.o" -x "*.in" -x "#*"  -x Makefile dia-0.83-orig/configure.in dia-0.83/configure.in 
+--- dia-0.83-orig/configure.in  Fri Dec 24 01:17:00 1999
++++ dia-0.83/configure.in       Sun Feb 20 12:47:48 2000
+@@ -160,4 +160,5 @@
+ sheets/ER/Makefile
+ plug-ins/Makefile
+ plug-ins/cgm/Makefile
++plug-ins/uml2pg_export/Makefile
+ )
+
+diff -u -r -P -x *dia* -x configure -x *.status -x *.o -x *.in -x #* -x Makefile dia-0.83-orig/plug-ins/Makefile.am dia-0.83/plug-ins/Makefile.am
+--- dia-0.83-orig/plug-ins/Makefile.am	Wed Dec 22 22:57:21 1999
++++ dia-0.83/plug-ins/Makefile.am	Sun Feb 20 12:08:09 2000
+@@ -1,2 +1,2 @@
+-SUBDIRS = cgm
++SUBDIRS = cgm uml2pg_export
+ 
+diff -u -r -P -x *dia* -x configure -x *.status -x *.o -x *.in -x #* -x Makefile dia-0.83-orig/plug-ins/uml2pg_export/uml2pg.c dia-0.83/plug-ins/uml2pg_export/uml2pg.c
+--- dia-0.83-orig/plug-ins/uml2pg_export/uml2pg.c	Wed Dec 31 23:00:00 1969
++++ dia-0.83/plug-ins/uml2pg_export/uml2pg.c	Sun Feb 20 14:23:14 2000
+@@ -0,0 +1,199 @@
++/* -*- Mode: C; c-basic-offset: 4 -*- */
++/* Dia -- an diagram creation/manipulation program
++ * Copyright (C) 1998 Alexander Larsson
++ *
++ * uml2pg.c -- plugin for dia
++ * Copyright (C) 2000 jbn
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include <unistd.h>
++#include <stdlib.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <stdio.h>
++#include <fcntl.h>
++#include <glib.h>
++
++#include "config.h"
++#include "intl.h"
++
++/* gnome-xml: */
++#include <gnome-xml/tree.h>
++#include <gnome-xml/parser.h>
++
++#include "load_save.h"
++#include "dia_xml.h"
++#include "group.h"
++#include "message.h"
++#include "preferences.h"
++#include "diapagelayout.h"
++
++/* we have an intimate knowledge of the UML stuff */
++#include "objects/UML/class.h"
++#include "objects/UML/uml.h"
++extern ObjectType umlclass_type;  /* this requires that the shared lib be linked with '-luml_objects' */
++
++static char *
++pg_map_type(char *t)
++{ /* this is meant to be used in the future to implement a user-defined mapping table before the export proper */
++  
++  if(!strcmp("string",t))
++    return "varchar(80)";
++  
++  return t;
++}   
++
++static void 
++pg_write_umlclass(UMLClass *cl, FILE *file)
++{
++    UMLAttribute *attr=NULL;
++    GList *list=NULL;
++
++#if 0
++    fprintf(/*file*/stdout,"class name=%s\n",cl->name);
++    list = cl->attributes;
++    while (list != NULL) {
++	attr = (UMLAttribute *) list->data;
++	fprintf(/*file*/stdout,"\tattribute name=%s type=%s\n",attr->name,attr->type);	
++	list = g_list_next(list);
++    }   
++#else
++    
++    fprintf(file,"CREATE TABLE %s (\n",cl->name);
++    list = cl->attributes;
++    while (list != NULL) {
++	attr = (UMLAttribute *) list->data;
++	
++	list = g_list_next(list);
++
++	fprintf(file,"\t%s\t%s%c\n",
++		attr->name, 
++		pg_map_type(attr->type), 
++		list==NULL?' ':',' /* we don't want a comma on the last symbol before the closing parenthesis */
++		); 
++	
++    }   
++    fprintf(file,");\n");
++    
++
++    /*  should look like the following:
++     *  CREATE TABLE weather (
++     *        city            varchar(80),
++     *        temp_lo         int,           -- low temperature
++     *        temp_hi         int,           -- high temperature
++     *        prcp            real,          -- precipitation
++     *        date            date
++     *  );
++     */
++
++#endif
++
++} 
++
++static void
++write_objects(GList *objects, FILE *file)
++{
++  char buffer[31];
++  ObjectNode obj_node;
++  GList *list=NULL;
++
++  list = objects;
++  while (list != NULL) {
++    Object *obj = (Object *) list->data;
++
++    /*(*obj->type->ops->save)(obj, obj_node, filename);*/
++    
++/*    if(obj)
++	printf("0x%x %s\n",obj->type,obj->type->name);*/
++    
++    if(obj->type==&umlclass_type)
++	{
++	    UMLClass *klass = (UMLClass*)obj;
++	    pg_write_umlclass(klass,file);
++	} 
++    
++    list = g_list_next(list);
++  }
++}
++
++static int
++diagram_data_save(DiagramData *data, const char *filename)
++{
++  FILE *file;
++  int res;
++  int i;
++  Layer *layer;
++  AttributeNode attr;
++  int ret;
++   
++  file = fopen(filename, "wb");
++
++  if (file==NULL) {
++    message_error(_("Couldn't open: '%s' for writing.\n"), filename);
++    return FALSE;
++  }
++
++  if(data->layers->len>1)
++      {
++	  message_error(_("Don't know how to handle more than one layer..."));
++	  return FALSE;
++      }
++  
++  layer = (Layer *) g_ptr_array_index(data->layers, 0);
++  
++  fprintf(file,"-- file generated by Postgres DDL export plugin for dia\n");
++  write_objects(layer->objects, file);
++  fclose(file);
++
++  if (ret < 0)
++    return FALSE;
++
++  return TRUE;
++}
++
++/* --- export filter interface --- */
++static void
++export_pgsql(DiagramData *data, const gchar *filename,
++	      const gchar *diafilename)
++{
++  gboolean res = diagram_data_save(data, filename);
++}
++
++static const gchar *extensions[] = { "sql", NULL };
++static DiaExportFilter pg_export_filter = { N_("Postgres SQL DDL"), extensions, export_pgsql };
++
++/* --- dia plugin interface --- */
++int
++get_version(void)
++{
++    return 0;
++}
++
++void
++register_objects(void)
++{
++    filter_register_export(&pg_export_filter);
++}
++
++void
++register_sheets(void)
++{
++}
++
++
++
++
+
+diff -u -r -P -x "*dia*" -x configure -x "*.status" -x "*.o" -x "*.in" -x "#*"  -x Makefile dia-0.83-orig/plug-ins/uml2pg_export/Makefile.am dia-0.83/plug-ins/uml2pg_export/Makefile.am
+--- dia-0.83-orig/plug-ins/uml2pg_export/Makefile.am    Sat Feb 26 09:38:02 2000
++++ dia-0.83/plug-ins/uml2pg_export/Makefile.am Sat Feb 26 09:15:14 2000
+@@ -0,0 +1,10 @@
++## Process this file with automake to produce Makefile.in
++
++pkglib_LTLIBRARIES = libuml2pg_filter.la
++
++libuml2pg_filter_la_SOURCES = uml2pg.c
++
++libuml2pg_filter_la_LDFLAGS = -export-dynamic -module -avoid-version
++libuml2pg_filter_la_LIBADD = @GTK_LIBS@ -L../../objects/UML -luml_objects
++
++INCLUDES = -I$(top_srcdir)/intl -I$(srcdir)/../../lib -I$(srcdir)/../../app -I$(srcdir)/../../objects/UML @CFLAGS@ @GTK_CFLAGS@ @GNOME_CFLAGS@

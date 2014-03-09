@@ -1,0 +1,1592 @@
+diff -u -r -P Dcc-v2.5i/AUTHORS Dcc-v2.5i-jbn/AUTHORS
+--- Dcc-v2.5i/AUTHORS	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/AUTHORS	Sat Feb 26 10:40:54 2000
+@@ -0,0 +1,4 @@
++  Yves Noyelle (<Yves.Noyelle@supelec.fr>)
++  Supelec, Service Informatique,
++  Plateau de Moulon, F-91192 Gif/Yvette Cedex
++
+diff -u -r -P Dcc-v2.5i/COPYING Dcc-v2.5i-jbn/COPYING
+--- Dcc-v2.5i/COPYING	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/COPYING	Thu Feb 17 11:25:19 2000
+@@ -0,0 +1,6 @@
++Copyright for dcc (Disciplined C Checker)
++-----------------------------------------
++
++//  Copyright Ecole Superieure d'Electricite, France, 1995.
++//  All Rights Reserved.
++
+diff -u -r -P Dcc-v2.5i/ChangeLog Dcc-v2.5i-jbn/ChangeLog
+--- Dcc-v2.5i/ChangeLog	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/ChangeLog	Sat Feb 26 10:41:37 2000
+@@ -0,0 +1,2 @@
++This file would be automatically generated when exporting from CVS,
++if it were used for this project...
+diff -u -r -P Dcc-v2.5i/INSTALL Dcc-v2.5i-jbn/INSTALL
+--- Dcc-v2.5i/INSTALL	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/INSTALL	Sat Feb 26 10:39:35 2000
+@@ -0,0 +1,24 @@
++REQUIREMENTS:
++=============
++
++Dcc only needs a C compiler.
++
++BUILDING:
++=========
++
++To build, run:
++
++ ./configure
++ make
++
++
++INSTALL:
++========
++install it by doing:
++
++ make install
++
++By default Dcc is installed in /usr/local.
++You can change that by passing --prefix=/some/dir to configure.
++
++
+diff -u -r -P Dcc-v2.5i/Makefile.am Dcc-v2.5i-jbn/Makefile.am
+--- Dcc-v2.5i/Makefile.am	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/Makefile.am	Sat Feb 26 11:25:38 2000
+@@ -0,0 +1,15 @@
++EXTRA_DIST = adaptstarterfilevms.com askforgpr.com copyright dccFiles.mng \
++	dccarticle.ascii dccarticle.ps dcchelp.mms dcmsg.eng dcmsg.fre \
++	dcmsg.txt dcreadme.pod dcreadme.txt dcreadme1.txt descrip.mms \
++	disclaimer extracthdrfilesvms.com frsttime.mms installdccvms.com \
++	makefile.win32 makefile.win32old pod2Text.pl restrydcc.txt \
++	rmdirvms.com srchdiffrestry.com tstdccvms.com vmsreadme.txt \
++	trydcc.c trydcc.h
++
++bin_PROGRAMS=dcc
++dcc_SOURCES=dcblk.c dcblk.h dcdecl.c dcdecl.h dcdir.c dcdir.h \
++dcexp.c dcexp.h dcext.c dcext.h dcfmt.c dcfmt.h \
++dcinst.c dcinst.h dcmain.c dcmain.h dcprag.c dcprag.h \
++dcrec.c dcrec.h dcrecdir.c dctxttok.c dctxttok.h dynarray.h 
++
++
+diff -u -r -P Dcc-v2.5i/NEWS Dcc-v2.5i-jbn/NEWS
+--- Dcc-v2.5i/NEWS	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/NEWS	Sat Feb 26 10:39:45 2000
+@@ -0,0 +1 @@
++No news yet.
+\ No newline at end of file
+diff -u -r -P Dcc-v2.5i/README Dcc-v2.5i-jbn/README
+--- Dcc-v2.5i/README	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/README	Thu Feb 17 11:25:19 2000
+@@ -0,0 +1,898 @@
++NAME
++----
++     dcc - Disciplined C Checker (version 2.5x)
++
++SYNOPSIS
++--------
++     Syntax : dcc [options] [File.C]
++
++DESCRIPTION
++-----------
++     dcc  is  a  C checker program, described in the December 1995 issue of ACM
++     SIGPLAN Notices (see also 'dccarticle.ps' and  'dccarticle.ascii' included
++     files).
++
++Copyright
++---------
++     Copyright Ecole Superieure d'Electricite ('Supelec'), France, 1995.
++     All Rights Reserved.
++
++Agreement
++---------
++     TITLE.   Title,  ownership rights, and intellectual property rights in and
++     to the Software shall remain in Supelec and/or its suppliers. The Software
++     is protected by international copyright treaties.
++
++     DISCLAIMER OF WARRANTY. Since  the  Software  is  provided free of charge,
++     the  Software is  provided on an  "AS IS" basis, without  warranty  of any
++     kind,  including  without  limitation  the warranties  of merchantability,
++     fitness for a particular purpose and non-infringement. The  entire risk as
++     to the quality and performance of the Software is borne by you. Should the
++     Software prove  defective, you and not  Supelec  assume the entire cost of
++     any service and repair.
++     This disclaimer of warranty constitutes an essential part of the agreement.
++     SOME  STATES/COUNTRIES  DO NOT  ALLOW  EXCLUSIONS  OF AN IMPLIED WARRANTY,
++     SO THIS  DISCLAIMER  MAY NOT  APPLY TO YOU  AND YOU MAY  HAVE  OTHER LEGAL
++     RIGHTS THAT VARY FROM STATE/COUNTRY TO STATE/COUNTRY OR BY JURISDICTION.
++
++     LIMITATION OF LIABILITY. UNDER NO CIRCUMSTANCES AND UNDER NO LEGAL THEORY,
++     TORT, CONTRACT, OR OTHERWISE, SHALL SUPELEC OR ITS SUPPLIERS OR  RESELLERS
++     BE LIABLE TO YOU OR ANY OTHER PERSON FOR ANY INDIRECT, SPECIAL, INCIDENTAL,
++     OR  CONSEQUENTIAL  DAMAGES OF ANY CHARACTER INCLUDING, WITHOUT LIMITATION,
++     DAMAGES   FOR  LOSS  OF  GOODWILL,  WORK  STOPPAGE,  COMPUTER  FAILURE  OR
++     MALFUNCTION,  OR  ANY  AND  ALL  OTHER COMMERCIAL DAMAGES OR LOSSES.  SOME
++     STATES/COUNTRIES DO NOT ALLOW THE EXCLUSION OR LIMITATION OF INCIDENTAL OR
++     CONSEQUENTIAL  DAMAGES,  SO THIS LIMITATION AND EXCLUSION MAY NOT APPLY TO
++     YOU.
++
++Version&Author
++--------------
++     dcc version 2.5,       July 29th 1999
++     dcc version 2.5c, September 29th 1999
++     dcc version 2.5d,   October 13th 1999
++     dcc version 2.5f,   October 28th 1999
++     dcc version 2.5g,  November 27th 1999
++     dcc version 2.5h,   January 26th 2000
++     dcc version 2.5i,  February 17th 2000
++
++         Yves Noyelle (<Yves.Noyelle@supelec.fr>)
++         Supelec, Service Informatique,
++         Plateau de Moulon, F-91192 Gif/Yvette Cedex
++
++Contents
++--------
++      1 - Generalities
++      2 - In the event of bug
++      3 - Distribution files
++      4 - Configuration, compilation and installation of dcc
++      5 - Execution files
++      6 - Test files
++      7 - Article
++      8 - Available d-pragmas
++      9 - Indentation rules
++     10 - Options
++     11 - Environment variables
++     12 - Exit statuses
++     13 - Badly implemented features (as of now)
++     14 - Unimplemented features (as of now)
++     15 - Known bug(s)
++     16 - Main changes with respect to previous version
++     17 - About '16 bits int' platforms
++
++- 1 - Generalities
++------------------
++     dcc  verifies  that a C  source  file  complies  with the  precepts of
++     Disciplined C, a set of rules aiming at elevating ANSI C to  the  rank
++     of high level language (as opposed to portable assembly language), and
++     making as much semantics as possible  flow  from  the  design  to  the
++     source   code.    This   is   achieved   mainly  via  quasi-compulsory
++     types/constants naming and 'const' qualifier use.
++
++     It  also  detects  most  of  the pitfalls of the C language, helps the
++     programmer organize his program modules and write them  so  that  they
++     are  well structured, well encapsulated and more portable, and finally
++     gives some much-needed compile-time checking tools.
++
++     dcc  is quite fast (from 5 to 10 times faster than a compiler), and is
++     itself written in Disciplined C.
++
++- 2 - In the event of bug
++-------------------------
++     No  guarantee  is  given  that  this  version  of dcc is free of bugs,
++     although every efforts are made to chase and eliminate them.
++
++     If  you  uncover  one  (or  more...),  please  let  me know (at e-mail
++     <dccsupport@supelec.fr>); a bug report should include a description of
++     the  problem  and  a  short  source  file  causing  it, along with the
++     version/release number of dcc (see  paragraph  10)  and  the  platform
++     (machine/system) used.
++
++- 3 - Distribution files
++------------------------
++    There are five sets of files :
++
++    - program files
++        configdc.th
++        dccFiles.mng
++        dc.th
++        dcblk.c/h/ph
++        dcdecl.c/h/ph
++        dcdir.c/h/ph
++        dcexp.c/h/ph
++        dcext.c/h/ph
++        dcfmt.c/h
++        dcinst.c/h/ph
++        dcmain.c/h/ph
++        dcprag.c/h/ph
++        dcrec.c/h/ph
++        dcrecdir.c/ph/th
++        dctxttok.c/h
++        dcmsg.*
++
++    - installation files
++        adaptStarterFile     (UNIX)    (courtesy of C. Bocage, CSD Supelec)
++        adaptstarterfilevms.com (VMS)  (courtesy of C. Bocage, CSD Supelec)
++        askforgpr.com        (VMS)
++        chooseMsgLanguage    (UNIX)
++        chooseStarterFile    (UNIX)
++        createLocalFilesMngFile (UNIX) (courtesy of C. Bocage, CSD Supelec)
++        createlocalexec      (UNIX)
++        descrip.mms          (VMS)
++        extractheaderfilevms.com (VMS) (courtesy of J. Lauret, SUNY@SB, USA)
++        frsttime.mms         (VMS)
++        installdccvms.com    (VMS)
++        installfile          (UNIX)
++        makefile             (UNIX)    (courtesy of C. Bocage, CSD Supelec)
++        makefile.win32       (WINDOWS) (courtesy of C. Enache, UPB student,
++                                                                     Romania)
++        rmdirvms.com         (VMS)
++
++    - execution files
++        *.adj                (adjustment files)
++        dynarray.h           (header file for dynamic arrays, independent of
++                                                                         dcc)
++        predefmacvmsvax.txt
++        predefmacvmsalpha.txt
++        starter.dccCcHP715   (courtesy of F. Mullet, alumnus)
++        starter.dccClWin32   (courtesy of E. Bezine, junior student)
++        starter.dccDjgpp     (courtesy of J.F. Tilman, alumnus)
++        starter.dccGccAlphaSkel
++        starter.dccGccHPUXSkel
++        starter.dccGccLinuxSkel (courtesy of Ch. Duverger, alumnus)
++        starter.dccGccMipsSkel
++        starter.dccGccSunosSkel (courtesy of Ch. Duverger, alumnus)
++        starter.dccVmsAlpha
++        starter.dccVmsVax
++        starter.dccXlcAix    (courtesy of W. Briscoe, freelance, UK)
++
++    - test files
++        tstdcc
++        tstdccvms.com
++        trydcc.c/h
++        restrydcc.txt
++        srchdiffrestry.com
++
++    - files describing dcc
++        dccarticle.ps
++        dccarticle.ascii (to be able to obtain 'diff' with previous
++                                                                version(s))
++
++     FILES  FROM  OLD DISTRIBUTIONS SHOULD BE DISCARDED BEFORE INSTALLING A
++     NEW VERSION (except possibly local adjustment files).
++
++     Note :  each dcc source file begins with a  /* <fileName> */  comment,
++             and ends with a /* End <fileName> */ comment, to  make it easy
++             to check that it has not been truncated by error.
++
++- 4 - Configuration, compilation and installation of dcc
++--------------------------------------------------------
++     The   configuration   phase   means   possible  adaptations  of  files
++     'configdc.th',  'dccFiles.mng',  and  'dcmsg.txt'.   Choice  of   file
++     'starter.dcc' is discussed paragraph 5.
++
++     File 'configdc.th' serves to configurate dcc (buffer sizes and so on);
++     most settings should be valid on any machine (except  perhaps  smaller
++     memory  machines);  comments  are  supposed to be meaningful enough to
++     make clear the use of each defined symbol.
++     The  symbol  LONGLONG  should only be  defined on  platforms  having a
++     larger integer size than 'long'; its value is then the  naming of that
++     type (e.g. "#define LONGLONG long long" or "#define LONGLONG __int64".)
++     In the latter case, a "#define __int64 long long" should be put in the
++     starter  file. If LONGLONG  is  not  defined,  the  syntax  for  'long
++     long'  numerical constants ("LL") is not recognized (except in  system
++     header  files).
++     The  macro  IsVisibleChar governs what an 'invisible character' is; it
++     is to  be  adapted  to  locally  used  character  set  extension.
++     The  SignedChar/SignedIntField  symbols  may  have to be adapted  from
++     their default value.
++     EBCDIC character coding could be supported by  changing the 'charInfo'
++     array (file 'dcrec.c').
++     Input/output is done entirely via fopen/fread/feof/fflush/fputs/fclose/
++     getchar/setvbuf. The  only other used  system  functions  are: malloc/
++     realloc/free,  setjmp/longjmp,  exit/abort, system (to pass control to 
++     the local compiler), fileno/isatty, and getenv.
++
++     File 'dccFiles.mng' is to be adapted to local conditions; it indicates
++     the directory where dcc execution  files  (adjustment  files  and  the
++     starter file) are to be found, and the system header files  directory.
++     If there are several  system  header  files  directories,  use  symbol
++     'PredefDCCDFLTS'  (see  paragraph  10; for gcc platforms, command file
++     'createLocalFilesMngFile'  computes the value  of  this  symbol).  The
++     content of environment variable DCCFILES, if defined, supersedes these
++     values; its format is:  <dccExecFilesDir> or <dccExecFilesDir> <space>
++     <sysHdrDir>.
++
++     Files   'dcmsg.###'  contain  the  text  of  all  messages  (including
++     errors/warnings); since these messages are C string literals, they may
++     be  changed  at will.  '###' indicates the language used for messages;
++     at present, there exist "eng"lish  and  "fre"nch  versions.  In  these
++     files,  the  character  sequence '@x', where x is a digit in the range
++     '1'-'9', is not outputted as such, but replaced by a text generated by
++     dcc.  The  character  sequence  '@0'  toggles  a flip-flop controlling
++     output  of  the  '@0'  parenthesized  message  chunks  (output  if  in
++     interactive  mode after 'e'/'E' command, or if options '+zve', '+zvve'
++     activated).
++
++  UNIX OS
++
++     On an UNIX system, once these files set, compilation is done by typing
++     'make'. The 'make install' command installs dcc into the system (first
++     edit file 'installfile' to define where you want it to be; unmodified,
++     this file installs dcc in /usr/local/bin/, and the  'execution'  files
++     in  /usr/local/lib/DccExecFiles/  (if  changed,  change  also value of
++     DccExecFilesDir symbol in file  'dccFiles.mng').   Then  test  dcc  on
++     itself  (command  file  'tstdcc'): this should  generate  no error nor
++     warning.
++
++  VMS OS
++
++     On  a VMS system, use the 'installdccvms.com' file.  The following DCL
++     logical names have to be defined beforehand:
++
++    dccexecfilesdir
++       directory where dcc execution files are installed,
++
++    dccsyshdrdir
++       directory  where system header files ('stdio.h' etc.) can be found (in
++       text form).
++
++     Also,  'dcc'  has  to  be  defined as a "foreign" command ($ dcc :== $
++     <complete executable file name>). The test file is 'tstdccvms.com'.
++
++  WindowsXX OS
++
++     On WindowsXX, with Microsoft VisualC++ 4.0, use 'makefile.win32' file;
++     do not forget to set the INCLUDE, LIB, and PATH environment variables,
++     e.g. :
++
++        set INCLUDE=C:\Program Files\DevStudio\VC\include
++        set LIB=C:\Program Files\DevStudio\VC\lib
++        set PATH=C:\Program Files\DevStudio\VC\bin;C:\Program Files\
++                                                    DevStudio\SharedIDE\bin
++
++  Other
++
++     On other systems, you are on your own...
++
++  Note : possible  local  compiler  warnings  while  compiling  dcc  may 
++         safely be ignored (provided the compiler is mature).
++
++- 5 - Execution files
++---------------------
++     Several files are needed by dcc to execute correctly:
++
++  Starter file
++
++     Its  purpose  is  to  define  those symbols that are predefined by the
++     local compiler.  It also gives the name of the compiler (via a  string
++     literal,  that  must  be  the  value  of  the '__dcc' symbol), and can
++     override local 'exotic' features (such as the "globalvalue"  specifier
++     of  VMS C compilers). Starter files for VMS C compilers (both VAXs and
++     ALPHAs), the ULTRIX gcc compiler, the OSF1  gcc  compiler,  the  HP-UX
++     cc/gcc  compilers, the LINUX gcc compiler, the SUNOS gcc compiler, the
++     AIX xlc  compiler, the  Djgpp  compiler and the  Windows  VisualC++ cl
++     compiler are included. For  SUNOS,  the  system header files directory
++     must be the gcc header files directory.
++
++     When  the  value  of  the  '__dcc'  symbol  indicates  gcc (or cc on a
++     VMS/Alpha  platform),  a  'skeleton'  starter  file  is  automatically
++     completed   with   the   compiler  predefined  macros  (command  files
++     adaptStarterFile*).  This could be done for other compilers,  provided
++     they provide a way to these macros.
++
++     Note 1 : the  called  compiler  can  be  changed  from the  default by 
++              redefining  the '__dcc'  symbol in the dcc  command line ('-D'
++              or '/DEF' option), but then the  starter  file may have to be
++              changed.
++
++     Note 2 : system  include files  are  configurated via several symbols,
++              such as _XOPEN_SOURCE  or _POSIX_C_SOURCE; these symbols  are
++              not defined  by default in dcc (except if the called compiler
++              is gcc or VMS/Alpha cc), which may result in 'undefined func-
++              tion' messages. To set such a symbol, either define it in the
++              'starter.dcc'  file  (then it  is  global  for all users), or
++              define it  using  the  '-D'  command  line  option  (possibly
++              via the DCCDFLTS environment variable, see paragraph 10).
++
++  Adjustment files
++
++     Their  purpose  is  to  amend system header files, so that they do not
++     cause dcc to issue warnings.   Conceptually,  an  adjustment  file  is
++     appended  to the end of the corresponding header file (after the first
++     inclusion,     or     after     each     inclusion      if      symbol
++     ADJFILES_INCLUDED_AT_EACH_INCL is defined in the starter file; cf file
++     'time.adj').
++
++     An   adjustment   file   should   not   declare/define   anything  not
++     declared/defined by the corresponding header file (except if something
++     is  missing  in  it,  such as the prototype for the "sbrk" function in
++     stdlib.h),  but  they  may  redeclare  at  will  function  prototypes,
++     external objects, typedefs (even already used ones) and macros.
++
++     Any preprocessor feature can be used in them.  The 'cdefined' function
++     (similar to the 'defined' preprocessor function, but answering True if
++     its parameter is an  identifier  defined in the program, as opposed to
++     in  the  preprocessor) can be  used  to adjust, in a  portable manner,
++     common  (but  non-ANSI  imposed, that is, not  compulsory)  functions/
++     objects that are locally defined (see for example 'isascii' management
++     in 'ctype.adj').
++
++     By   convention,   for   a  system  header  file  named  'xxx.h',  the
++     corresponding adjustment file is named 'xxx.adj', and is  searched  by
++     default  in  the  DccExecFilesDir  directory.   If  one  wants another
++     suffix, or wants to put (some) adjustment files in other  directories,
++     one  has  to  create  an  'adjFiles.dcc"  file  in the DccExecFilesDir
++     directory, file whose format is (for each line):
++
++       "<system header file name>" , "<corresponding adjustment file
++                                         full name (with absolute path)>" ;
++
++     Example of 'adjFiles.dcc' file:
++       #define X11AdjDir "/usr/local/include/DccAdj/"
++       "icon.h", X11AdjDir "icon.adj";
++       "Kn/Knvas.h", X11AdjDir "Knvas.adj";
++       ...
++       #undef X11AdjDir
++
++     Should  any  header  file  reveal  to be unamendable, it can be purely
++     replaced by the  corresponding  adjustment  file.   It  must  then  be
++     described in the 'adjFiles. dcc' file, and the corresponding line must
++     be prefixed by an exclamation point ('!').
++
++     Adjustment  files  for most C system header files (curses.h:  courtesy
++     of W. Briscoe, freelance, UK) are included; adjustment files  for  the
++     X-Window library are available, but only partially checked.
++
++- 6 - Test files
++----------------
++     The  command  files  'tstdcc*' just check dcc on its own source files;
++     this check should not generate any error nor warning.
++
++     You can get a feeling of what dcc can do for you by typing the command
++     "dcc trydcc.c".  You can also limit dcc scrutiny by using  appropriate
++     options  (see paragraph 10) or by  conditional  compilation  using the
++     '__dcc' symbol.
++
++     There  are  many  more  non-regression  check  files, but they are not
++     included.
++
++- 7 - Article
++-------------
++     Unfortunatly,  the wrong version of the paper was published in SIGPLAN
++     Notices; so the right version  (in  fact  updated  and  somewhat  more
++     detailed)  is  included,  in  Postscript form, along with a pure ASCII
++     form (for 'diff' purposes).
++
++- 8 - Available d-pragmas
++-------------------------
++     For  the following, a "file identifier" is defined to be composed of a
++     "file access path" (machine name, directories...), followed first by a
++     "file  name"  and  then by a "file suffix" that begins on the last dot
++     '.' seen in the file identifier.
++
++     A "header" file is a source file whose file suffix contains the letter
++     'h' at least once, and which is included via the '#include' directive;
++     a  "system  header"  file  is a header file whose '#include' directive
++     uses the '<...>' form. A "body" file is a source file which is neither
++     a header file, nor a file included by a header file.
++
++     Except  /*~DccCompliant*/, /*~DollarSign*/, /*~NoWarn*/, /*~PopWarn*/,
++     /*~Private*/,   /*~PrivateTo*/,   /*~Public*/,   /*~TypeCombination*/,
++     /*~Warn*/, d-pragmas have purely local effect, that is they have to be
++     used each time the corresponding situation occurs.
++
++  /*~BackBranch*/
++
++   avoids warning on backward branches:
++       goto alrdDefLabel /*~BackBranch*/;
++
++  /*~CastTo <type> */
++
++   allows  pseudo-cast  between  parallel types; also  to be used to  avoid
++   warning on comparison of difference(s) of unsigned int:
++       typedef struct {int x;}Ts; typedef Ts Ts1;
++       Ts s; Ts1 s1; unsigned int ui1, ui2;
++       ...
++       s1 = /*~CastTo Ts1*/ s;
++       if (/*~CastTo unsigned int */ (ui2 - ui1) > 1) ...
++
++  /*~ComposingHdr*/
++
++   tells  that the whole service provided by the included header file is to
++   be part of the service offered by the including header file:
++       #include <math.h> /*~ComposingHdr*/
++
++  /*~DccCompliant*/
++
++   in a system  header file, indicates  that the (remaining portion of the)
++   file  conforms to dcc  requirements, and  that  'typedefs'  will  create
++   parallel types if applicable; usable anywhere (in a system header file).
++
++  /*~DollarSign*/
++
++   at beginning of module; autorizes '$' in identifiers.
++
++  /*~DynInit*/
++
++   avoids  warning on  dynamic  initialization (by constants) of  composite
++   objects:
++       [auto] struct _s toto = {...} /*~DynInit*/;
++
++  /*~EndLongjmpCallable*/
++
++   tells the 'volatile'  qualifier  checking  algorithm that the  "longjmp"
++   function won't  be called  behind  this point.   Usable  anywhere in the
++   body of a  function, after the first token (which  may  be  a  mere ';')
++   following the end of a "setjmp"-controlled 'if' statement.
++
++  /*~ExactCmp*/
++
++   avoids warning on floating point comparison for (in)equality:
++       if (fltVar == 0 /*~ExactCmp*/) ...
++
++  /*~FullEnum*/
++
++   asks dcc to warn if not all constants of the (enum) switch type has been
++   used as case values; only useful if  a  'default'  clause  is used  (for
++   example to catch possible "strange" values of the enum expression):
++       default: /*~FullEnum*/ ...
++
++  /*~Generic*/
++
++   tells dcc that the  returned  type of a function is  compatible with any
++   descendant  of this type (subtyping) or, in case  of 'void *'  returning
++   function,  with  any  pointer.  Not  valid  if any  parameter  is marked
++   /*~ResultType*/ or /*~ResultPtr*/; incompatible with /*~Utility*/:
++       int atoi(const char *) /*~Generic*/;
++       double sin(double) /*~Generic*/;
++       void *allocateChunk() /*~Generic*/;
++   The variant /*~Generic <fctList> */ is allowed  only in adjustment files
++   (see /*~RootTyp*/).
++   /*~Generic*/ can also be used with function parameters, inside pointers on
++   functions, to specify that the so-qualified parameter is compatible with any
++   descendant:
++       void (*savPSCF)(char /*~Generic*/)
++
++  /*~Ignore*/
++
++   tells  dcc  to  ignore  object-like  or  function-like calls to  defined
++   pseudo-macro. Allowed only in starter files:
++       #define /*~Ignore*/ __asm
++
++  /*~IndexType <type> */
++
++   specifies type of index values usable for an array, either statically or
++   dynamically  allocated  (default  index type for static  arrays: type of
++   bound, except if bound  given by a plain  arithmetic  constant; then any
++   integral arithmetic type), or that can be added to a pointer. To be used
++   in array/ pointer declaration:
++       Color arr[ArrSiz /*~IndexType ColorIndex */];
++       bool * /*~IndexType Trow*/ * /*~IndexType Tcol*/ twoDimSwitchArray;
++   or pointer creation:
++       & /*~IndexType Tcol*/ col
++
++  /*~Init <var>*/
++
++   tells the  initialization-checking  algorithm  that, from  now on, <var>
++   can be considered as initialized.  Very specific (see X-Window  applica-
++   tions,  or  adjustment  files).  Usable  anywhere (in the  scope  of the
++   variable):
++       XtSetArg(arg[0], XmNchildren, /*~Init children*/ &children);
++
++  /*~LiteralCst*/
++
++   tells  that expressions  of a so qualified type accept unnamed constants
++   without warnings (see also option '-zgpr', paragraph 10):
++       typedef int Int /*~LiteralCst*/;
++
++  /*~LocalAdr*/
++
++   avoids warning  when returning address of local object from function, or
++   assigning such address to global/external pointer:
++       gblPtr = &localObject + 1 /*~ LocalAdr */;
++
++  /*~Masking*/
++
++   avoids  warning  if a macro  name  is the same as  an  already  existing
++   identifier:
++       #define /*~Masking*/ macroName macroBody
++
++  /*~MayModify*/
++
++   indicates  that  modifications  may  occur through a  supposedly  const-
++   pointing  pointer  parameter (via  casting), or  through a  struct/union
++   parameter containing non-const pointers:
++       void clipTree(struct _tree x /*~MayModify*/);
++
++  /*~NeverReturns*/
++
++   specifies that a void function never returns control:
++       static void errExit(...) /*~NeverReturns*/;
++   The variant  /*~NeverReturns <fctList> */  is allowed only in adjustment
++   files (see /*~RootTyp*/).
++
++  /*~NoBreak*/
++
++   avoids warning if falling through the end of a 'case' statement:
++       case C1 : i = 1;  /*~NoBreak*/
++       case C2 : i++;  break;
++
++  /*~NoDefault*/
++
++   avoids  warning if no 'default'  case at end of 'switch'  statement (not
++   needed if type of  switch driving  expression  is enum type of which all
++   constants have been used as case values):
++       case Cn : i = ... ;
++       /*~NoDefault*/
++
++  /*~NonConstExp*/
++
++   makes dcc believe that a (parenthesized) expression is not constant:
++       if ((~0==-1)/*~NonConstExp*/) ...
++   Notice  that the  Pascalian  form "while (TRUE)"  can be  advantageously
++   replaced by the C idiom "for (;;)",
++
++  /*~NotUsed*/
++
++   prevents  warning on  not-used  object or enum constant  or formal para-
++   meter (function or macro):
++       enum {Ce1, Ce2 /*~NotUsed*/, Ce3 ...}
++       static void shift(Tstring x, TtypeElt y /*~NotUsed*/);
++       #define Sink(x /*~ NotUsed */)
++       static const char *bof = "Version 3.3.1" /*~NotUsed*/;
++
++  /*~NoWarn*/
++
++   to be  used in front of  sections of code not (yet)  dcc-compliant  (see
++   also /*~Warn*/, /*~PopWarn*/ d-pragmas);  usable anywhere.  Warnings are
++   automatically disabled inside system header files.
++
++  /*~OddCast*/
++
++   to make dcc swallow a cast it frowns upon:
++       ptrInt = (int * /*~OddCast*/) ptrStruct;
++
++  /*~PopWarn*/
++
++   goes  back to  previous  Warn/NoWarn  state (see /*~Warn*/, /*~No Warn*/
++   d-pragmas); usable anywhere. At least 16 levels kept.
++
++  /*~PortableQM*/
++
++   to make dcc swallow a cast it has good reasons to believe not portable:
++       ptrFloat = (float * /*~PortableQM*/)ptrDbl;
++
++  /*~Private*/
++
++   strictly equivalent to /*~PrivateTo "<currentFile>","<corresponding body
++   file>"*/.
++
++  /*~PrivateTo "<fileName>" [, "<fileName>"]* */
++
++   indicates  that struct/union members, or enum constants, declared there-
++   after are  only visible  from  the  indicated  file(s),  or from  macros
++   defined in the  indicated file(s) or called by such macros; usable  any-
++   where (in a header file). Scope: until  next  /*~Private*/  or /*~Priva- 
++   vateTo*/ or /*~Public*/ d-pragma; an '#include' of (another) header file
++   creates a hole in the scope for the duration of the include.  File names
++   may contain joker character(s):
++       /*~PrivateTo "dcrec.c", "dcrec.*h*" */
++
++  /*~PseudoVoid*/
++
++   authorizes  a so-declared non  void-returning  function  to be used as a
++   statement:
++       char *strcpy(char *x, const char *y) /*~PseudoVoid*/;
++   The variant  /*~PseudoVoid <fctList> */  is  allowed  only in adjustment
++   files (see /*~RootTyp*/).
++
++  /*~Public*/
++
++   indicates end of last /*~Private#*/ scope; usable  anywhere (in a header
++   file).
++
++  /*~ResultPtr*/
++
++   to be used for  (pointer)  parameters  that  are  returned  unchanged as
++   result; same effect as /*~ResultType*/, plus allows  "should be 'const'"
++   pointer checking propagation:
++       char *strchr(const char * /*~ResultPtr*/, char);
++
++  /*~ResultType*/
++
++   indicates  that the result type of a function  call is the type (or  the
++   smallest common type) of the current  actual parameter(s)  corresponding
++   to the so qualified formal parameter(s):
++       void *realloc(void *old /*~ResultType*/, size_t size);
++       Window mergeWindow(Window/*~ResultType*/, Window/*~ResultType*/);
++       long sum(long m/*~ResultType*/, long n /*~ResultType*/);
++       short s; signed char b; unsigned char ub;
++
++       s = sum(b, s);  /* OK; returned type behaves as 'short' from dcc
++                                                             standpoint. */
++       s = sum(ub, s); /* idem */
++       b = sum(SCHAR_MAX + 1, b); /* WRONG, because same return type as
++                                                                  above. */
++
++  /*~RootType*/
++
++   renders  incompatible  with its  hierarchy the subtree  headed by the so
++   qualified (parallel) type:
++       typedef unsigned int Talgn /*~RootType*/;
++   The  variant  /*~RootType  <typeList>*/  is  allowed  only in adjustment
++   files:
++       /*~RootType wchar_t, wint_t*/
++
++  /*~SameValue*/
++
++   avoids  warning if an enum  constant have the same value that a previous
++   constant of the same enum:
++       enum _colors {BegColors, InfraRed=BegColors /* ~SameValue not
++            necessary here, because 'BegColor' is last defined constant */,
++             Red, Orange, Yellow, ..., BegVisibleColors=Red /*~SameValue*/}
++
++  /*~SideEffectOK*/
++
++   tells that a side effect via a macro parameter is OK:
++       #define DangerousMin(x, y/*~SideEffectOK*/) (x<y)? x : y
++
++       DangerousMin(oldMin, tab[i++])
++
++  /*~SizeOfMemBlk*/
++
++   allows  to  check,  for   'malloc'-like  functions   using  'sizeof'  as
++   parameter,  whether the type of the sizeof  argument is the type pointed
++   by the receiving pointer:
++       void *malloc(size_t /*~SizeOfMemBlk*/);
++
++  /*~SizeOK*/
++
++   avoids  warning  when no width  limit  is  specified ('sscanf'), or when
++   a large struct/union is passed as parameter:
++       (void)sscanf(charPtr1, "%s", charPtr2/*~SizeOK*/);
++
++  /*~TypeCombination <combList>*/
++
++   indicates allowed combinations  between (a priori incompatible) parallel
++   types. Syntax:
++       <combList>::= <combElt> [ , <combElt> ]*
++       <combElt> ::= <typeIdent> <operator> <typeIdent> -> <typeIdent>
++   The possible operators are:  +, -, *, /, %, ~+ (non-commutative add) and
++   ~* (non-commutative multiply).  For the / operator, if one operand is  a
++   descendant  of  the other, the result type can be a native type (for use
++   as a generic coefficient). Besides, some combinations  are automatically
++   deduced:
++   - for '+', from Ta + Tb -> Tc are deduced:
++                   Tb + Ta -> Tc   (1)
++                   Ta - Tb -> Tc   (2) (deduced only if Tc = Ta)
++   - for '*', from Ta * Tb -> Tc are deduced:
++                   Tb * Ta -> Tc   (3)
++                   Tc / Ta -> Tb   (4)
++                   Tc % Ta -> Tc   (5)
++                   Tc / Tb -> Ta   (6)
++                   Tc % Tb -> Tc   (7)
++     Lines 5 and 7 are not deduced if either Ta or Tb is floating.
++   If necessary, type  hierarchy  is  searched  to find  an  applying  type
++   combination.  Usable  only  outside  of  any  block.  Once given, a type
++   combination cannot be desactivated:
++       typedef float Volt, Amp, Watt, Ohm;
++       typedef int Tgen;   /* 'generic' type */
++       typedef Tgen Tspe;  /* specialization of Tgen */
++       /*~TypeCombination Volt  * Amp  -> Watt,
++                          Amp   * Ohm  -> Volt,
++                          Watt  / Watt -> float,
++                          Tspe ~+ Tgen -> Tspe */
++       typedef int Tfruit;
++       typedef Tfruit Tapple, Tpear;
++       /*~TypeCombination Tapple + Tpear -> Tfruit */
++       {
++         Volt v; Amp i; Watt p, p1; Ohm r; Tspe spe; Tgen gen;
++         typedef Tapple MacIntosh;
++         MacIntosh macIntosh; Tfruit fruit; Tpear pear;
++
++         p = r * i * i;    /* OK */
++         p = v * (v / r);  /* OK */
++         r *= p/p1;        /* OK */
++         spe -= gen;       /* OK; illegal if no ~TypeCombination, because
++                                contrary to dcc default hierarchy rules. */
++         fruit = pear + macIntosh;  /* idem */
++        }
++
++  /*~Undef <listIdent>*/  /*~UndefTag <listIdent>*/
++
++   terminates  (for dcc) the scope of all indicated  identifiers ('general'
++   or 'tag' name space); usable anywhere (at block level 0):
++       /*~Undef TpermSto, headPermSto*/
++
++  /*~Utility*/
++
++   to be used for  functions  returning a  representation  type that has no
++   reason to be named. Incompatible with /*~Generic*/:
++       int scanf(const char *, ...) /*~Utility*/;
++
++  /*~VoidToOther*/
++
++   autorizes  automatic  conversion from (non-generic) 'void *' type to any
++   other pointer type, or to read, via scanf, into a 'void *' variable:
++       objPtr = /*~VoidToOther*/ ptrOnVoid;
++       scanf("%i", /*~VoidToOther*/ ptrOnVoid);
++
++  /*~Warn*/
++
++   to be used in front of dcc-compliant code (default state at beginning of
++   program,  except  if  '-znw'  option  used); usable  anywhere.  See also
++   /*~PopWarn*/, /*~NoWarn*/ d-pragmas.
++
++  /*~zif <boolExp> <stringCst> */
++
++   causes  emission on  stderr (at  dcc  execution  time) of <stringCst> if
++   compile-time evaluable <boolExp> is true; can make use of  special 'zif'
++   functions  (see "Compile-time checking tool"  paragraph  in the paper on
++   dcc), and be used anywhere (also inside macros):
++       /*~ zif (sizeof(typArray)/sizeof(typArray[0]) !=
++                    __extent(TtypName)+1) "Array 'typArray': bad length" */
++
++  Notes
++
++   - for  dcc,  a   d-pragma  is   made   up  of  tokens,  perfectly macro-
++     substitutable; for  instance, the  /*~LocalAdr*/  d-pragma consists of
++     the three following tokens:
++        /*~
++        LocalAdr    (identifier)
++        */
++   - an empty d-pragma name is legal; the d-pragma is then ignored (except in
++     the reach of a '#' preprocessing operator, in which case it translates into
++     a space),
++   - d-pragmas are visible in the list generated by the '+zlt' option,
++   - numerous examples of use of d-pragmas can be found in dcc source files.
++
++- 9 - Indentation rules
++-----------------------
++     Indentation is checked only on lines beginning by a  declaration  or a
++     statement.
++
++    General case :
++      Indentation level is increased on  entering  a  block  (just after its
++      opening brace), for the duration of the block, or on entering  a  sub-
++      statement  (statement  controlled  by  'if',  'else',  'do',  'while',
++      'for'), for the duration of the substatement.
++
++    Special cases :
++      - no change of indentation level for construct  "else if", both tokens
++        being on same line;
++      - block as substatement may be lined up with controlling statement;
++      - 'case/default's may be lined up with corresponding 'switch'.
++
++- 10 - Options
++--------------
++     Their  list can be  obtained  by  executing  a  dcc  command alone (no
++     argument); the version/release number is also given. If the prefix '+'
++     is replaced by '-', or vice versa, the option effect is reversed.
++
++     dcc also  interprets  `-I'/`-D'/`-U' cc options (or their VMS counter-
++     parts), besides passing them to the compiler; for VMS, only one  macro
++     can  be defined by a  given  /DEF,  and /DEF,/INCL,/UNDEF options have
++     to be named that way, and separated by spaces.
++
++     The environment variable DCCDFLTS can  contain any part of the command
++     line;  its  content  is  logically  added  (just  after  'dcc') to the
++     befinning  of  all following  dcc  command  lines.  The  value  of the
++     'PrefixDCCDFLTS' symbol (file 'dccFiles. mng') is also added.
++
++     A given option is valid for all files met subsequently in the  command
++     line, unless reverted; options given after last file name  apply  only
++     to last file.
++
++     Available options :
++      -zac  no missing 'const' qualifier check,
++      -zbo  no 'bool' type check,
++      -zcc  do not call compiler,
++      -zcw  call compiler only if no warning/error,
++      -zfci do not check first character of identifiers,
++      -zfrt no unnamed function return type check,
++      -zgpr no check of "good programming practices",
++      -zinc no '#include' position check,
++      -zind no indentation check,
++      -znui no check of unused identifiers,
++      -znup no check of unused function parameters,
++      -znw  start in "no warning" mode,
++      -zpe  no check of various possible errors,
++      -zpo  no portability check,
++      -zrd  no readability check,
++      -zsam no stopping after each message,
++      -ztr  no trailer,
++      -zuc  no check of unnamed constants,
++      -zwa  no warnings,
++      -zwr  no forced newline at 80 characters,
++      +zae  report all errors/warnings (default is, after a few messages, to report
++            only first error of each statement or declaration),
++      +zafn always display  current file  name  in  error/warning messages,
++      +zctn check first character  of  (created)  type  names (if '-zfci'),
++      +zdol allows '$' in identifiers,
++      +zepl warn on empty formal parameter list,
++      +zkwm keywords redefinable (via macro),
++      +zlt/+zlt'x' list last tokens  processed before error/warning  ('x' =
++            buffer length),
++      +zmcc check all pointers for missing 'const' qualifier,
++      +zmic more index type checking,
++      +zmsg'x'  'x': maximum number of emitted messages,
++      +zpnt check that function parameters are of named type,
++      +zsy  print each block's symbol table,
++      +ztab'x'  'x': tab  spacing (for indentation purposes; 8 is default),
++      +zusg give 'usage',
++      +zve  output more informative error/warning messages,
++      +zvve idem '+zve', plus output type descriptions in full.
++     Options not beginning with `+z'/`-z'  are transmitted to compiler (but
++     '/def=', '/undef=', '/incl=' options are heeded).
++
++- 11 - Environment variables
++----------------------------
++     There are two of them: DCCFILES (see  paragraph  4), and DCCDFLTS (see
++     paragraph 10).
++
++- 12 - Exit statuses
++--------------------
++     dcc provides six different exit statuses, whose values depend on local
++     platform (see file 'configdc.th'):  EXIT_SUCCESS,  two  EXIT_WARNINGS,
++     two  EXIT_ERRORS,  and  EXIT_FAILURE  (returned  when  dcc has to stop
++     before end).
++
++- 13 - Badly implemented features
++---------------------------------
++     - floating  constants are  recognized  lexically, but ill converted if
++       they have a  fractional  part or a non-nul exponent (only noticeable
++       in  fancy  array  declaration,  e.g.  "char arr[(int)(2.5+6.5)]"  =>
++       arr[4], not [9]),
++     - not all cases of non-portability checked.
++
++     Note: 'sizeof' does not take into account alignment holes, but this is
++     done on purpose, to render portable some checks via /*~zif*/.
++
++- 14 - Unimplemented features
++-----------------------------
++     - check for non-ambiguity of external identifiers,
++     - size of objects not given ('+zsy' option),
++     - computation of floating-point constant expressions,
++     - propagation of /*~MayModify*/ information.
++
++- 15 - Known bugs
++-----------------
++     none
++
++- 16 - Main changes with respect to previous version
++----------------------------------------------------
++     - detection of unused macros,
++     - more verification on naming conventions; option '-zfci' added; 
++     - option '-zctn' changed to '+zctn',
++     - options '+zdol', '-zgpr' added,
++     - lack of  'volatile'  qualifier in the reach of a  setjmp()/longjmp()
++       pair now checked,
++     - d-pragmas /*~EndLongjmpCallable*/ and /*~Ignore*/ added,
++     - better   management   of  "overflow"/"left truncation"  messages  on
++       greater-than-32-bits platforms,
++     - no more complain if "undefining" non-existant macro in command line.
++
++- 17 - About 16 bits int platforms
++----------------------------------
++     Portage stalled.
++
+diff -u -r -P Dcc-v2.5i/aclocal.m4 Dcc-v2.5i-jbn/aclocal.m4
+--- Dcc-v2.5i/aclocal.m4	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/aclocal.m4	Sat Feb 26 11:28:32 2000
+@@ -0,0 +1,160 @@
++dnl aclocal.m4 generated automatically by aclocal 1.4
++
++dnl Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
++dnl This file is free software; the Free Software Foundation
++dnl gives unlimited permission to copy and/or distribute it,
++dnl with or without modifications, as long as this notice is preserved.
++
++dnl This program is distributed in the hope that it will be useful,
++dnl but WITHOUT ANY WARRANTY, to the extent permitted by law; without
++dnl even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++dnl PARTICULAR PURPOSE.
++
++# Do all the work for Automake.  This macro actually does too much --
++# some checks are only needed if your package does certain things.
++# But this isn't really a big deal.
++
++# serial 1
++
++dnl Usage:
++dnl AM_INIT_AUTOMAKE(package,version, [no-define])
++
++AC_DEFUN(AM_INIT_AUTOMAKE,
++[AC_REQUIRE([AC_PROG_INSTALL])
++PACKAGE=[$1]
++AC_SUBST(PACKAGE)
++VERSION=[$2]
++AC_SUBST(VERSION)
++dnl test to see if srcdir already configured
++if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
++  AC_MSG_ERROR([source directory already configured; run "make distclean" there first])
++fi
++ifelse([$3],,
++AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE", [Name of package])
++AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [Version number of package]))
++AC_REQUIRE([AM_SANITY_CHECK])
++AC_REQUIRE([AC_ARG_PROGRAM])
++dnl FIXME This is truly gross.
++missing_dir=`cd $ac_aux_dir && pwd`
++AM_MISSING_PROG(ACLOCAL, aclocal, $missing_dir)
++AM_MISSING_PROG(AUTOCONF, autoconf, $missing_dir)
++AM_MISSING_PROG(AUTOMAKE, automake, $missing_dir)
++AM_MISSING_PROG(AUTOHEADER, autoheader, $missing_dir)
++AM_MISSING_PROG(MAKEINFO, makeinfo, $missing_dir)
++AC_REQUIRE([AC_PROG_MAKE_SET])])
++
++#
++# Check to make sure that the build environment is sane.
++#
++
++AC_DEFUN(AM_SANITY_CHECK,
++[AC_MSG_CHECKING([whether build environment is sane])
++# Just in case
++sleep 1
++echo timestamp > conftestfile
++# Do `set' in a subshell so we don't clobber the current shell's
++# arguments.  Must try -L first in case configure is actually a
++# symlink; some systems play weird games with the mod time of symlinks
++# (eg FreeBSD returns the mod time of the symlink's containing
++# directory).
++if (
++   set X `ls -Lt $srcdir/configure conftestfile 2> /dev/null`
++   if test "[$]*" = "X"; then
++      # -L didn't work.
++      set X `ls -t $srcdir/configure conftestfile`
++   fi
++   if test "[$]*" != "X $srcdir/configure conftestfile" \
++      && test "[$]*" != "X conftestfile $srcdir/configure"; then
++
++      # If neither matched, then we have a broken ls.  This can happen
++      # if, for instance, CONFIG_SHELL is bash and it inherits a
++      # broken ls alias from the environment.  This has actually
++      # happened.  Such a system could not be considered "sane".
++      AC_MSG_ERROR([ls -t appears to fail.  Make sure there is not a broken
++alias in your environment])
++   fi
++
++   test "[$]2" = conftestfile
++   )
++then
++   # Ok.
++   :
++else
++   AC_MSG_ERROR([newly created file is older than distributed files!
++Check your system clock])
++fi
++rm -f conftest*
++AC_MSG_RESULT(yes)])
++
++dnl AM_MISSING_PROG(NAME, PROGRAM, DIRECTORY)
++dnl The program must properly implement --version.
++AC_DEFUN(AM_MISSING_PROG,
++[AC_MSG_CHECKING(for working $2)
++# Run test in a subshell; some versions of sh will print an error if
++# an executable is not found, even if stderr is redirected.
++# Redirect stdin to placate older versions of autoconf.  Sigh.
++if ($2 --version) < /dev/null > /dev/null 2>&1; then
++   $1=$2
++   AC_MSG_RESULT(found)
++else
++   $1="$3/missing $2"
++   AC_MSG_RESULT(missing)
++fi
++AC_SUBST($1)])
++
++# Like AC_CONFIG_HEADER, but automatically create stamp file.
++
++AC_DEFUN(AM_CONFIG_HEADER,
++[AC_PREREQ([2.12])
++AC_CONFIG_HEADER([$1])
++dnl When config.status generates a header, we must update the stamp-h file.
++dnl This file resides in the same directory as the config header
++dnl that is generated.  We must strip everything past the first ":",
++dnl and everything past the last "/".
++AC_OUTPUT_COMMANDS(changequote(<<,>>)dnl
++ifelse(patsubst(<<$1>>, <<[^ ]>>, <<>>), <<>>,
++<<test -z "<<$>>CONFIG_HEADERS" || echo timestamp > patsubst(<<$1>>, <<^\([^:]*/\)?.*>>, <<\1>>)stamp-h<<>>dnl>>,
++<<am_indx=1
++for am_file in <<$1>>; do
++  case " <<$>>CONFIG_HEADERS " in
++  *" <<$>>am_file "*<<)>>
++    echo timestamp > `echo <<$>>am_file | sed -e 's%:.*%%' -e 's%[^/]*$%%'`stamp-h$am_indx
++    ;;
++  esac
++  am_indx=`expr "<<$>>am_indx" + 1`
++done<<>>dnl>>)
++changequote([,]))])
++
++# Add --enable-maintainer-mode option to configure.
++# From Jim Meyering
++
++# serial 1
++
++AC_DEFUN(AM_MAINTAINER_MODE,
++[AC_MSG_CHECKING([whether to enable maintainer-specific portions of Makefiles])
++  dnl maintainer-mode is disabled by default
++  AC_ARG_ENABLE(maintainer-mode,
++[  --enable-maintainer-mode enable make rules and dependencies not useful
++                          (and sometimes confusing) to the casual installer],
++      USE_MAINTAINER_MODE=$enableval,
++      USE_MAINTAINER_MODE=no)
++  AC_MSG_RESULT($USE_MAINTAINER_MODE)
++  AM_CONDITIONAL(MAINTAINER_MODE, test $USE_MAINTAINER_MODE = yes)
++  MAINT=$MAINTAINER_MODE_TRUE
++  AC_SUBST(MAINT)dnl
++]
++)
++
++# Define a conditional.
++
++AC_DEFUN(AM_CONDITIONAL,
++[AC_SUBST($1_TRUE)
++AC_SUBST($1_FALSE)
++if $2; then
++  $1_TRUE=
++  $1_FALSE='#'
++else
++  $1_TRUE='#'
++  $1_FALSE=
++fi])
++
+diff -u -r -P Dcc-v2.5i/configure.in Dcc-v2.5i-jbn/configure.in
+--- Dcc-v2.5i/configure.in	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/configure.in	Sat Feb 26 11:56:50 2000
+@@ -0,0 +1,199 @@
++dnl Configure.in script for 'dcc'
++dnl This script is processed by GNU autoconf to produce a
++dnl suitable 'configure' file which, when run, will automatically
++dnl create a Makefile for the package, configured with all the adequate
++dnl options.
++
++dnl mostly generated by autoscan & slightly modified by 
++dnl Jean-Baptiste Nivoit <jbnivoit@multimania.com>
++
++dnl Process this file with autoconf to produce a configure script.
++AC_INIT(dcblk.c)
++
++AM_INIT_AUTOMAKE(dcc, 2.5)
++
++dnl Specify a header configuration file
++AM_CONFIG_HEADER(config.h)
++
++dnl Initialize maintainer mode
++AM_MAINTAINER_MODE
++
++dnl Build time sanity check
++AM_SANITY_CHECK
++
++dnl Checks for programs.
++AC_PROG_CC
++
++dnl Checks for header files.
++AC_HEADER_STDC
++AC_CHECK_HEADERS(unistd.h)
++
++dnl Checks for typedefs, structures, and compiler characteristics.
++AC_C_CONST
++AC_TYPE_SIZE_T
++
++dnl Checks for library functions.
++AC_FUNC_MEMCMP
++dnl AC_FUNC_SETVBUF_REVERSED
++
++dnl originally done in the makefile with the 'DoAlways' target:
++dnl you don't need to do it each time any more, just re-configure if needed.
++
++dnl originally done in 'chooseMsgLanguage'
++WITH_MSGS="eng"
++AC_FUNC_ALLOCA
++AC_ARG_WITH(with_msgs,[  --messages=eng|fre      Messages in english or french],[WITH_MSGS="eng"], [WITH_MSGS="fre"])
++
++
++dnl originally done in 'createLocalFilesMngFile'
++WITH_ZPGR="yes"
++AC_FUNC_ALLOCA
++AC_ARG_WITH(with_zpgr,[  --with-zgpr             Turn on -zgpr option (less checking of good programming                          practices) by default],[WITH_ZPGR="yes"], [WITH_ZPGR="yes"])
++dnl FIXME spacing between 'programming' & 'practices' accidentally matches
++dnl the default width of xterms, this should be deduced by autoconf, not 
++dnl pre-supposed...
++
++string1='PrefixDCCDFLTS'
++string2='SysHdrDir'
++
++if test "$WITH_ZPGR" = yes 
++then
++  defaults="-zgpr "
++else
++  defaults=""
++fi
++sysHdrDir=0
++
++AC_MSG_CHECKING([& generating local mng file])
++
++if test -f DccExecFiles/starter.dcc
++then
++  grep __dcc.\*gcc DccExecFiles/starter.dcc > /dev/null
++  if test $? = 0 
++  then
++    echo 'main(){}'|cc -v -E - 2> specs.tmp>/dev/null
++    cppIncludeDirs=`sed -e '1,/#include </d' -e '/^End of/,$d' specs.tmp`
++    if test -z "$cppIncludeDirs" 
++    then
++      set $cppIncludeDirs
++  # Find last include directory 
++      while test $# -ne 1 ; do w="$w $1"; shift; done
++      sysHdrDir=$1
++  # If there are other directories, prepare to put them in PrefixDCCDFLTS
++      if test -z "$w" ; then
++        set $w
++        defaults="$defaults$*"
++        defaults=`echo " $defaults"|sed -e 's. /. -I/.g'`
++        defaults="$defaults "
++    else
++      echo '>>> cc does not give list of system include directories;'
++      echo '>>> "dccFiles.mng" file may have to be adapted by hand.'
++      fi
++    fi
++  fi
++fi
++AC_MSG_RESULT([done])
++
++# RegExp for string   <tab|space>* " <any>* "   (BEWARE of <tab> !!!) "
++suffix='\([ 	]*\)"\([^"]*\)"'
++if test -z $sysHdrDir
++then
++  sed -e "s!$string1$suffix!$string1\1\"\2$defaults\"!"\
++      -e "s!$string2$suffix!$string2\1\"$sysHdrDir\"!"\
++      dccFiles.mng >locdcFil.mng
++else
++  sed -e "s!$string1$suffix!$string1\1\"\2$defaults\"!"\
++      dccFiles.mng >locdcFil.mng
++fi
++#
++
++dnl originally done in 'chooseStartFile' & 'adaptStarterFile'
++##echo "configuring for $ac_sys_system"
++AC_MSG_CHECKING(DCC exec files configuration)
++
++system=`uname -s`
++machine=`uname -m`
++
++dnl this needs tuning esp. for HP systems
++DCC_STARTER=""
++case $system in	
++	*ultrix*|*ULTRIX*) DCC_STARTER="DccExecFiles/starter.dccGccMipsSkel" ;;
++	*OSF*) DCC_STARTER="DccExecFiles/starter.dccGccAlphaSkel" ;;
++	*hp*|*HP*)  DCC_STARTER="DccExecFiles/starter.dccCcHP715" ;;
++	*SunOS*) DCC_STARTER="DccExecFiles/starter.dccGccSunosSkel" ;;
++	*Linux*|*linux*) DCC_STARTER="DccExecFiles/starter.dccGccLinuxSkel" ;;
++	*AIX*) DCC_STARTER="DccExecFiles/starter.dccXlcAix" ;;
++	*) echo ' '
++           echo '>>> Unsupported platform (as of now); try adapting one of the'
++           echo '>>> supplied "DccExecFiles/starter.*" files, and copy it to "DccExecFiles/starter.dcc".'
++esac
++
++dnl echo "DCC_STARTER = $DCC_STARTER"
++
++if test -z "$DCC_STARTER"
++then
++    echo '>>> Unsupported platform (as of now); try adapting one of the'
++    echo '>>> supplied "DccExecFiles/starter.*" files, and copy it to "DccExecFiles/starter.dcc".'
++    DCC_STARTER="DccExecFiles/starter.dcc"
++else
++    echo -n ''
++fi
++
++cp $DCC_STARTER starter.dcc
++
++dnl dnl FIXME this can be done in a better way using '$system'
++dnl if   [ $system = 'ULTRIX' -a $machine = 'RISC' ]; then
++dnl   cp DccExecFiles/starter.dccGccMipsSkel DccExecFiles/starter.dcc
++dnl elif [ $system = 'OSF1'  -a $machine = 'alpha' ]; then
++dnl   cp DccExecFiles/starter.dccGccAlphaSkel DccExecFiles/starter.dcc
++dnl elif [ $system = 'HP-UX' -a $machine = '9000/715' ]; then
++dnl   cp DccExecFiles/starter.dccCcHP715 DccExecFiles/starter.dcc
++dnl elif [ $system = 'HP-UX' ]; then
++dnl   cp DccExecFiles/starter.dccGccHPUXSkel DccExecFiles/starter.dcc
++dnl elif [ $system = 'SunOS' ]; then
++dnl   cp DccExecFiles/starter.dccGccSunosSkel DccExecFiles/starter.dcc
++dnl elif [ $system = 'Linux' ]; then
++dnl   cp DccExecFiles/starter.dccGccLinuxSkel DccExecFiles/starter.dcc
++dnl elif [ $system = 'AIX' ]; then
++dnl   cp DccExecFiles/starter.dccXlcAix DccExecFiles/starter.dcc
++dnl elif [ ! -f DccExecFiles/starter.dcc ]; then
++dnl   echo '>>> Unsupported platform (as of now); try adapting one of the'
++dnl   echo '>>> supplied "DccExecFiles/starter.*" files, and copy it to "DccExecFiles/starter.dcc".'
++dnl fi
++
++grep __dcc.\*gcc starter.dcc > /dev/null
++if test $? = 0 
++then
++  echo 'main(){}'|gcc -v -E - 2> specs.tmp>/dev/null
++  cppCmd=`grep cpp specs.tmp`
++  cppDefines=`echo " $cppCmd"|sed -e 's/ [^-][^ ][^ ]*//g'`
++  cppDefines=`echo " $cppDefines"|sed -e 's/ -[^D][^ ]*//g'`
++  cppDefines=`echo " $cppDefines"|sed -e 's/-$//'`
++  cppDefines=`echo " $cppDefines"|sed -e 's/ =/=/g'`
++  cppDefines=`echo " $cppDefines"|sed -e 's/= /=/g'`
++  set -- $cppDefines
++  while test $# -gt 0 ;do
++    symb=`echo $1|sed -e 's/^-D\([^=]*\).*/\1/'`
++    val=`echo $1|sed -e 's/^[^=]*=*\(.*\)/\1/'`
++    if test "$val" = "" 
++    then
++        val=1
++    fi
++    echo "#define $symb $val">>starter.tmp
++    shift
++  done
++  sort -u starter.tmp >>starter.dcc
++  rm -f starter.tmp
++  rm -f specs.tmp
++else
++  echo '>>> Specified C compiler does not tell predefined macros;'
++  echo '>>> "starter.dcc" file may have to be adapted by hand.'
++fi
++
++AC_MSG_RESULT(done)
++
++AC_OUTPUT(Makefile)
++
++
++
++
++dnl Jean-Baptiste Nivoit <jbnivoit@multimania.com>
++
++dnl Process this file with autoconf to produce a configure script.
++AC_INIT(dcblk.c)
++
++AM_INIT_AUTOMAKE(dcc, 2.5)
++
++dnl Specify a header configuration file
++AM_CONFIG_HEADER(config.h)
++
++dnl Initialize maintainer mode
++AM_MAINTAINER_MODE
++
++dnl Build time sanity check
++AM_SANITY_CHECK
++
++dnl Checks for programs.
++AC_PROG_CC
++
++dnl Checks for header files.
++AC_HEADER_STDC
++AC_CHECK_HEADERS(unistd.h)
++
++dnl Checks for typedefs, structures, and compiler characteristics.
++AC_C_CONST
++AC_TYPE_SIZE_T
++
++dnl Checks for library functions.
++AC_FUNC_MEMCMP
++dnl AC_FUNC_SETVBUF_REVERSED
++
++dnl originally done in the makefile with the 'DoAlways' target:
++dnl you don't need to do it each time any more, just re-configure if needed.
++
++dnl originally done in 'chooseMsgLanguage'
++WITH_MSGS="eng"
++AC_FUNC_ALLOCA
++AC_ARG_WITH(with_msgs,[  --messages=eng|fre      Messages in english or french],[WITH_MSGS="eng"], [WITH_MSGS="fre"])
++
++
++dnl originally done in 'createLocalFilesMngFile'
++WITH_ZPGR="yes"
++AC_FUNC_ALLOCA
++AC_ARG_WITH(with_zpgr,[  --with-zgpr             Turn on -zgpr option (less checking of good programming                          practices) by default],[WITH_ZPGR="yes"], [WITH_ZPGR="yes"])
++dnl FIXME spacing between 'programming' & 'practices' accidentally matches
++dnl the default width of xterms, this should be deduced by autoconf, not 
++dnl pre-supposed...
++
++string1='PrefixDCCDFLTS'
++string2='SysHdrDir'
++
++if test "$WITH_ZPGR" = yes 
++then
++  defaults="-zgpr "
++else
++  defaults=""
++fi
++sysHdrDir=0
++
++AC_MSG_CHECKING([& generating local mng file])
++
++if test -f DccExecFiles/starter.dcc
++then
++  grep __dcc.\*gcc DccExecFiles/starter.dcc > /dev/null
++  if test $? = 0 
++  then
++    echo 'main(){}'|cc -v -E - 2> specs.tmp>/dev/null
++    cppIncludeDirs=`sed -e '1,/#include </d' -e '/^End of/,$d' specs.tmp`
++    if test -z "$cppIncludeDirs" 
++    then
++      set $cppIncludeDirs
++  # Find last include directory 
++      while test $# -ne 1 ; do w="$w $1"; shift; done
++      sysHdrDir=$1
++  # If there are other directories, prepare to put them in PrefixDCCDFLTS
++      if test -z "$w" ; then
++        set $w
++        defaults="$defaults$*"
++        defaults=`echo " $defaults"|sed -e 's. /. -I/.g'`
++        defaults="$defaults "
++    else
++      echo '>>> cc does not give list of system include directories;'
++      echo '>>> "dccFiles.mng" file may have to be adapted by hand.'
++      fi
++    fi
++  fi
++fi
++AC_MSG_RESULT([done])
++
++# RegExp for string   <tab|space>* " <any>* "   (BEWARE of <tab> !!!) "
++suffix='\([ 	]*\)"\([^"]*\)"'
++if test -z $sysHdrDir
++then
++  sed -e "s!$string1$suffix!$string1\1\"\2$defaults\"!"\
++      -e "s!$string2$suffix!$string2\1\"$sysHdrDir\"!"\
++      dccFiles.mng >locdcFil.mng
++else
++  sed -e "s!$string1$suffix!$string1\1\"\2$defaults\"!"\
++      dccFiles.mng >locdcFil.mng
++fi
++#
++
++dnl originally done in 'chooseStartFile' & 'adaptStarterFile'
++##echo "configuring for $ac_sys_system"
++AC_MSG_CHECKING(DCC exec files configuration)
++
++system=`uname -s`
++machine=`uname -m`
++
++dnl this needs tuning esp. for HP systems
++DCC_STARTER=""
++case $system in	
++	*ultrix*|*ULTRIX*) DCC_STARTER="DccExecFiles/starter.dccGccMipsSkel" ;;
++	*OSF*) DCC_STARTER="DccExecFiles/starter.dccGccAlphaSkel" ;;
++	*hp*|*HP*)  DCC_STARTER="DccExecFiles/starter.dccCcHP715" ;;
++	*SunOS*) DCC_STARTER="DccExecFiles/starter.dccGccSunosSkel" ;;
++	*Linux*|*linux*) DCC_STARTER="DccExecFiles/starter.dccGccLinuxSkel" ;;
++	*AIX*) DCC_STARTER="DccExecFiles/starter.dccXlcAix" ;;
++	*) echo ' '
++           echo '>>> Unsupported platform (as of now); try adapting one of the'
++           echo '>>> supplied "DccExecFiles/starter.*" files, and copy it to "DccExecFiles/starter.dcc".'
++esac
++
++dnl echo "DCC_STARTER = $DCC_STARTER"
++
++if test -z "$DCC_STARTER"
++then
++    echo '>>> Unsupported platform (as of now); try adapting one of the'
++    echo '>>> supplied "DccExecFiles/starter.*" files, and copy it to "DccExecFiles/starter.dcc".'
++    DCC_STARTER="DccExecFiles/starter.dcc"
++else
++    echo -n ''
++fi
++
++cp $DCC_STARTER starter.dcc
++
++dnl dnl FIXME this can be done in a better way using '$system'
++dnl if   [ $system = 'ULTRIX' -a $machine = 'RISC' ]; then
++dnl   cp DccExecFiles/starter.dccGccMipsSkel DccExecFiles/starter.dcc
++dnl elif [ $system = 'OSF1'  -a $machine = 'alpha' ]; then
++dnl   cp DccExecFiles/starter.dccGccAlphaSkel DccExecFiles/starter.dcc
++dnl elif [ $system = 'HP-UX' -a $machine = '9000/715' ]; then
++dnl   cp DccExecFiles/starter.dccCcHP715 DccExecFiles/starter.dcc
++dnl elif [ $system = 'HP-UX' ]; then
++dnl   cp DccExecFiles/starter.dccGccHPUXSkel DccExecFiles/starter.dcc
++dnl elif [ $system = 'SunOS' ]; then
++dnl   cp DccExecFiles/starter.dccGccSunosSkel DccExecFiles/starter.dcc
++dnl elif [ $system = 'Linux' ]; then
++dnl   cp DccExecFiles/starter.dccGccLinuxSkel DccExecFiles/starter.dcc
++dnl elif [ $system = 'AIX' ]; then
++dnl   cp DccExecFiles/starter.dccXlcAix DccExecFiles/starter.dcc
++dnl elif [ ! -f DccExecFiles/starter.dcc ]; then
++dnl   echo '>>> Unsupported platform (as of now); try adapting one of the'
++dnl   echo '>>> supplied "DccExecFiles/starter.*" files, and copy it to "DccExecFiles/starter.dcc".'
++dnl fi
++
++grep __dcc.\*gcc starter.dcc > /dev/null
++if test $? = 0 
++then
++  echo 'main(){}'|gcc -v -E - 2> specs.tmp>/dev/null
++  cppCmd=`grep cpp specs.tmp`
++  cppDefines=`echo " $cppCmd"|sed -e 's/ [^-][^ ][^ ]*//g'`
++  cppDefines=`echo " $cppDefines"|sed -e 's/ -[^D][^ ]*//g'`
++  cppDefines=`echo " $cppDefines"|sed -e 's/-$//'`
++  cppDefines=`echo " $cppDefines"|sed -e 's/ =/=/g'`
++  cppDefines=`echo " $cppDefines"|sed -e 's/= /=/g'`
++  set -- $cppDefines
++  while test $# -gt 0 ;do
++    symb=`echo $1|sed -e 's/^-D\([^=]*\).*/\1/'`
++    val=`echo $1|sed -e 's/^[^=]*=*\(.*\)/\1/'`
++    if test "$val" = "" 
++    then
++        val=1
++    fi
++    echo "#define $symb $val">>starter.tmp
++    shift
++  done
++  sort -u starter.tmp >>starter.dcc
++  rm -f starter.tmp
++  rm -f specs.tmp
++else
++  echo '>>> Specified C compiler does not tell predefined macros;'
++  echo '>>> "starter.dcc" file may have to be adapted by hand.'
++fi
++
++AC_MSG_RESULT(done)
++
++AC_OUTPUT(Makefile)
++
++
++
++
+diff -u -r -P Dcc-v2.5i/configure.scan Dcc-v2.5i-jbn/configure.scan
+--- Dcc-v2.5i/configure.scan	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/configure.scan	Sat Feb 26 09:53:49 2000
+@@ -0,0 +1,21 @@
++dnl Process this file with autoconf to produce a configure script.
++AC_INIT(dcblk.c)
++
++dnl Checks for programs.
++AC_PROG_CC
++
++dnl Checks for libraries.
++
++dnl Checks for header files.
++AC_HEADER_STDC
++AC_CHECK_HEADERS(unistd.h)
++
++dnl Checks for typedefs, structures, and compiler characteristics.
++AC_C_CONST
++AC_TYPE_SIZE_T
++
++dnl Checks for library functions.
++AC_FUNC_MEMCMP
++AC_FUNC_SETVBUF_REVERSED
++
++AC_OUTPUT(makefile)
+diff -u -r -P Dcc-v2.5i/install-sh Dcc-v2.5i-jbn/install-sh
+--- Dcc-v2.5i/install-sh	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/install-sh	Sat Feb 26 10:41:49 2000
+@@ -0,0 +1 @@
++
+diff -u -r -P Dcc-v2.5i/missing Dcc-v2.5i-jbn/missing
+--- Dcc-v2.5i/missing	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/missing	Sat Feb 26 10:41:59 2000
+@@ -0,0 +1 @@
++
+diff -u -r -P Dcc-v2.5i/mkinstalldirs Dcc-v2.5i-jbn/mkinstalldirs
+--- Dcc-v2.5i/mkinstalldirs	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/mkinstalldirs	Sat Feb 26 10:41:56 2000
+@@ -0,0 +1 @@
++
+diff -u -r -P Dcc-v2.5i/config.h.in Dcc-v2.5i-jbn/config.h.in
+--- Dcc-v2.5i/config.h.in	Wed Dec 31 23:00:00 1969
++++ Dcc-v2.5i-jbn/config.h.in	Sat Feb 26 09:52:36 2000
+@@ -0,0 +1 @@
++/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+
+
+
+
+
+
+
+

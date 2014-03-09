@@ -1,0 +1,152 @@
+To: spencer@umich.edu
+Subject: gdtcl
+Date: Mon, 25 Nov 1996 18:18:22 PST
+From: "Dan Ellis" <dpwe@ICSI.Berkeley.EDU>
+
+Spencer - 
+
+Thank you for your Tcl interface to gd.  I have made a few changes to 
+it to work with gd1.2 (just extending the font table) and Tcl7.6 
+(recast as a loadable package).  I append the context diffs, in case 
+you are interested.
+
+Best wishes,
+
+-- DAn Ellis  <dpwe@icsi.berkeley.edu>  http://sound.media.mit.edu/~dpwe/
+   International Computer Science Institute  Berkeley  CA
+
+> diff -c gdCmd.c gd1.2/gdCmd.c
+*** gdCmd.c     Mon Nov 25 17:14:28 1996
+--- gd1.2/gdCmd.c       Mon Nov 25 18:09:56 1996
+***************
+*** 24,35 ****
+                          int entrySize, int initEntries);
+  void_pt Tcl_HandleAlloc(void_pt headerPtr, char *handlePtr);
+  void_pt Tcl_HandleXlate(Tcl_Interp *interp, void_pt headerPtr,
+!                       const char *handle);
+  void Tcl_HandleFree(void_pt headerPtr, void_pt entryPtr);
+  #endif
+  #include "gd.h"
+  #include "gdfonts.h"
+  #include "gdfontl.h"
+  
+  /* Fonts table. */
+  static struct {
+--- 24,38 ----
+                          int entrySize, int initEntries);
+  void_pt Tcl_HandleAlloc(void_pt headerPtr, char *handlePtr);
+  void_pt Tcl_HandleXlate(Tcl_Interp *interp, void_pt headerPtr,
+!                       /* const */ char *handle);
+  void Tcl_HandleFree(void_pt headerPtr, void_pt entryPtr);
+  #endif
+  #include "gd.h"
++ #include "gdfontt.h"
+  #include "gdfonts.h"
++ #include "gdfontmb.h"
+  #include "gdfontl.h"
++ #include "gdfontg.h"
+  
+  /* Fonts table. */
+  static struct {
+***************
+*** 36,43 ****
+      char *fontname;
+      gdFontPtr *fontp;
+  } fontTbl[] = {
+      "small",  &gdFontSmall,
+!     "large",  &gdFontLarge
+  };
+  
+  static void_pt GDHandleTable = 0;
+--- 39,49 ----
+      char *fontname;
+      gdFontPtr *fontp;
+  } fontTbl[] = {
++     "tiny",   &gdFontTiny,
+      "small",  &gdFontSmall,
+!     "mediumbold",     &gdFontMediumBold,
+!     "large",  &gdFontLarge,
+!     "giant",  &gdFontGiant
+  };
+  
+  static void_pt GDHandleTable = 0;
+***************
+*** 380,386 ****
+            return TCL_ERROR;
+        }
+      } else {
+!       if ( Tcl_GetOpenFile(interp, argv[2], 0, 1, &f ) != TCL_OK )
+            return TCL_ERROR;
+        /* Read GIF, XBM, or GD file? */
+        if ( argv[1][11] == 'I' ) {
+--- 386,392 ----
+            return TCL_ERROR;
+        }
+      } else {
+!       if ( Tcl_GetOpenFile(interp, argv[2], 0, 1, (ClientData*)&f ) != TCL_OK )
+            return TCL_ERROR;
+        /* Read GIF, XBM, or GD file? */
+        if ( argv[1][11] == 'I' ) {
+***************
+*** 437,443 ****
+      im = *(gdImagePtr *)Tcl_HandleXlate( interp, GDHandleTable, argv[2] );
+  
+      /* Get the file reference. */
+!     if ( Tcl_GetOpenFile(interp, argv[3], 1, 1, &f ) != TCL_OK )
+        return TCL_ERROR;
+  
+      /* Do it. */
+--- 443,449 ----
+      im = *(gdImagePtr *)Tcl_HandleXlate( interp, GDHandleTable, argv[2] );
+  
+      /* Get the file reference. */
+!     if ( Tcl_GetOpenFile(interp, argv[3], 1, 1, (ClientData*)&f ) != TCL_OK )
+        return TCL_ERROR;
+  
+      /* Do it. */
+***************
+*** 1048,1058 ****
+  /* 
+   * Initialize the package.
+   */
+! void
+  Gdtcl_Init( Tcl_Interp *interp ) 
+  {
+      Tcl_CreateCommand( interp, "gd", gdCmd,
+                         (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL );
+  }
+  
+  #ifndef TCLX_SUPPORT
+--- 1054,1066 ----
+  /* 
+   * Initialize the package.
+   */
+! int
+  Gdtcl_Init( Tcl_Interp *interp ) 
+  {
++     Tcl_PkgProvide(interp, "GdTcl", "1.2");
+      Tcl_CreateCommand( interp, "gd", gdCmd,
+                         (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL );
++     return TCL_OK;
+  }
+  
+  #ifndef TCLX_SUPPORT
+***************
+*** 1108,1114 ****
+  }
+  
+  void_pt Tcl_HandleXlate(Tcl_Interp *interp, void_pt headerPtr,
+!                       const char *handle)
+  {
+      Tcl_HashEntry *ep;
+      HandleTable *hp = (HandleTable *)headerPtr;
+--- 1116,1122 ----
+  }
+  
+  void_pt Tcl_HandleXlate(Tcl_Interp *interp, void_pt headerPtr,
+!                       /* const */ char *handle)
+  {
+      Tcl_HashEntry *ep;
+      HandleTable *hp = (HandleTable *)headerPtr;
+
+
