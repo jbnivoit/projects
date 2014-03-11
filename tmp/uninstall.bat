@@ -1,0 +1,17 @@
+
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::MagickConvertJPG -e " Win32::ShellExt::MagickConvertJPG->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::PDF              -e " Win32::ShellExt::PDF             ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::RenameMP3        -e " Win32::ShellExt::RenameMP3       ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::Zip              -e " Win32::ShellExt::Zip             ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::Base64Decode     -e " Win32::ShellExt::Base64Decode    ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::Base64Encode     -e " Win32::ShellExt::Base64Encode    ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::FIGlet           -e " Win32::ShellExt::FIGlet          ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::XML              -e " Win32::ShellExt::XML             ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::SwapFileNames    -e " Win32::ShellExt::SwapFileNames   ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::CopyPath         -e " Win32::ShellExt::CopyPath        ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::MD5              -e " Win32::ShellExt::MD5             ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::Tgz              -e " Win32::ShellExt::Tgz             ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::Whitespace       -e " Win32::ShellExt::Whitespace      ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::Gzip             -e " Win32::ShellExt::Gzip            ->uninstall; "
+perl -Id:\build\Win32-ShellExt-0.1 -MWin32::ShellExt::Tar              -e " Win32::ShellExt::Tar             ->uninstall; "
+
