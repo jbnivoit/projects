@@ -14,6 +14,7 @@ be even easier ;-) ).
 
 Also grep for 'FIXME's to find out what's left to do.
 
+You can find this at http://www.cpan.org/authors/id/J/JB/JBNIVOIT/
 
 ATTENTION: installing this module (using 'nmake install', or any other way that 
 invoke the 'install_registry' target in the generated Makefile) makes modifications
